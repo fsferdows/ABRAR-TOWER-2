@@ -32,3 +32,20 @@ export interface Inquiry {
   createdAt: string;
   status: 'new' | 'contacted' | 'reserved';
 }
+
+export interface FlatDetail {
+  id: string; // e.g. "101", "904"
+  floor: number; // 1 to 9
+  unitCode: string; // "A", "B", "C", "D"
+  flatName: string; // e.g. "Flat 101"
+  sizeSqFt: number;
+  bedrooms: number;
+  bathrooms: number;
+  verandas: number;
+  facing: string;
+  priceBDT: string;
+  priceNum: number; // In Lakhs BDT
+  status: 'Available' | 'Reserved' | 'Sold';
+  idealFor: string;
+  ReservedDates?: string[];
+}

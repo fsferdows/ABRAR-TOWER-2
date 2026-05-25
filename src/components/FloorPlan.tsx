@@ -24,8 +24,11 @@ import {
   Lock,
   MapPin,
   Wind,
-  Sun
+  Sun,
+  FileDown
 } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import { FlatDetail } from '../types';
 
 interface VisualUnit {
   id: string; // A, B, C, D
@@ -38,6 +41,8 @@ interface VisualUnit {
   idealFor: string;
   priceEstimate: string;
   basePriceNum: number; // In Lakhs BDT
+  description?: string;
+  highlights?: string[];
 }
 
 const ARCHITECTURAL_3D_HTML_BLOCK = `
@@ -803,23 +808,6 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
 </html>
 `;
 
-
-interface FlatDetail {
-  id: string; // e.g. "101", "904"
-  floor: number; // 1 to 9
-  unitCode: string; // "A", "B", "C", "D"
-  flatName: string; // e.g. "Flat 101"
-  sizeSqFt: number;
-  bedrooms: number;
-  bathrooms: number;
-  verandas: number;
-  facing: string;
-  priceBDT: string;
-  priceNum: number; // In Lakhs BDT
-  status: 'Available' | 'Reserved' | 'Sold';
-  idealFor: string;
-}
-
 export default function FloorPlan() {
   const [selectedFloor, setSelectedFloor] = useState<number>(1); // 0 = Ground Floor, 1-9 = Residential Floors
   const [selectedUnitId, setSelectedUnitId] = useState<string>('A');
@@ -997,6 +985,18 @@ export default function FloorPlan() {
     return 'Available';
   };
 
+  const getFlatReservedDates = (floor: number, unitCode: string): string[] => {
+    const status = getFlatStatus(floor, unitCode);
+    if (status === 'Available') return [];
+    const day = ((floor * 7 + unitCode.charCodeAt(0)) % 20) + 5;
+    const month = ((floor + unitCode.charCodeAt(0)) % 3) + 6; // June, July, August 2026
+    return [
+      `2026-0${month}-${day < 10 ? '0' + day : day}`,
+      `2026-0${month}-${(day + 1) < 10 ? '0' + (day + 1) : (day + 1)}`,
+      `2026-0${month}-${(day + 2) < 10 ? '0' + (day + 2) : (day + 2)}`
+    ];
+  };
+
   const getFlatPriceNum = (floor: number, basePrice: number): number => {
     // Floor premium rises by ৳0.5 Lakh per floor for level 2-5, and ৳0.8 Lakh per floor for level 6-9
     let premium = 0;
@@ -1016,6 +1016,7 @@ export default function FloorPlan() {
       const template = bespokeUnits.find(bu => bu.id === u)!;
       const flatIdNum = `${floor}0${units.indexOf(u) + 1}`;
       const finalPrice = getFlatPriceNum(floor, template.basePriceNum);
+      const status = getFlatStatus(floor, u);
       allFlats.push({
         id: flatIdNum,
         floor,
@@ -1028,11 +1029,169 @@ export default function FloorPlan() {
         facing: template.facing,
         priceBDT: `৳${finalPrice.toFixed(2)} Lakh`,
         priceNum: finalPrice,
-        status: getFlatStatus(floor, u),
-        idealFor: template.idealFor
+        status: status,
+        idealFor: template.idealFor,
+        ReservedDates: getFlatReservedDates(floor, u)
       });
     });
   }
+
+  const activeUnit = bespokeUnits.find(u => u.id === selectedUnitId) || bespokeUnits[0];
+  const activeFlatPrice = getFlatPriceNum(selectedFloor === 0 ? 1 : selectedFloor, activeUnit.basePriceNum);
+
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Color definitions
+    const cCharcoal = [15, 23, 42]; // #0f172a
+    const cGold = [212, 175, 55]; // #d4af37
+    const cSoftGray = [241, 245, 249];
+    const cTextDark = [30, 41, 59];
+    const cTextMuted = [100, 116, 139];
+
+    // Page styling & margins
+    const marginX = 20;
+    
+    // Draw charcoal header block
+    doc.setFillColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+    doc.rect(0, 0, 210, 45, 'F');
+
+    // Header Content
+    doc.setTextColor(cGold[0], cGold[1], cGold[2]);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text('ABRAR TOWER - II', marginX, 18);
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('BESPOKE ARCHITECTURAL LANDMARK // PRE-LAUNCH BROCHURE', marginX, 25);
+    doc.text('LOCATION: EAST FAYDABAD, UTTARA RAJUK BOUNDS, DHAKA', marginX, 30);
+
+    // Decorative gold line divider
+    doc.setFillColor(cGold[0], cGold[1], cGold[2]);
+    doc.rect(marginX, 43, 170, 0.8, 'F');
+
+    // Apartment details
+    doc.setTextColor(cTextDark[0], cTextDark[1], cTextDark[2]);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text(`Flat #${selectedFloor}0${['A', 'B', 'C', 'D'].indexOf(selectedUnitId) + 1}`, marginX, 60);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(cTextMuted[0], cTextMuted[1], cTextMuted[2]);
+    doc.text(`Level 0${selectedFloor} // Unit Category ${selectedUnitId}`, marginX, 67);
+
+    // Grid details box
+    doc.setFillColor(cSoftGray[0], cSoftGray[1], cSoftGray[2]);
+    doc.rect(marginX, 75, 170, 35, 'F');
+
+    doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('KEY SPECIFICATIONS', marginX + 6, 82);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(cTextDark[0], cTextDark[1], cTextDark[2]);
+    doc.text(`• Total Area: ${activeUnit.sizeSqFt} SQ FT`, marginX + 6, 89);
+    doc.text(`• Bed Tiers: ${activeUnit.bedrooms} BHK Arrangement`, marginX + 6, 95);
+    doc.text(`• Bathroom Suites: ${activeUnit.bathrooms} Luxury Baths`, marginX + 6, 101);
+
+    doc.text(`• Orientation: ${activeUnit.facing}`, marginX + 85, 89);
+    doc.text(`• Premium Slabs: Italian Statuario & Greek Marble`, marginX + 85, 95);
+    doc.text(`• Natural Daylight Vent Index: Guaranteed Corner`, marginX + 85, 101);
+
+    // Subtitle section
+    doc.setFont('Helvetica', 'oblique');
+    doc.setFontSize(11);
+    doc.setTextColor(cGold[0], cGold[1], cGold[2]);
+    doc.text(`"Recommended for: ${activeUnit.idealFor}"`, marginX, 122);
+
+    // Divider
+    doc.setDrawColor(226, 232, 240);
+    doc.line(marginX, 128, 190, 128);
+
+    // Architectural description header
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+    doc.text('ARCHITECTURAL SYNTHESIS', marginX, 137);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(cTextDark[0], cTextDark[1], cTextDark[2]);
+    
+    const textDesc = activeUnit.description || `Residence Category ${activeUnit.id} is a meticulously planned luxury residential apartment featuring premium layout details. Configured with a ${activeUnit.bedrooms} BHK spacious plan, ${activeUnit.bathrooms} bathrooms, and anti-skid premium floor finishes, this unit offers maximum space efficiency matching Dhaka RAJUK standards on a 10 Katha core plot footprint. Highly recommended for families seeking long-term quality, safety, and comfort.`;
+    
+    const splitDescription = doc.splitTextToSize(
+      textDesc,
+      170
+    );
+    doc.text(splitDescription, marginX, 144);
+
+    // Highlights list
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+    doc.text('INTERIOR SPACE LAYOUT EXTRA HIGHLIGHTS', marginX, 170);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(cTextDark[0], cTextDark[1], cTextDark[2]);
+    let currentY = 177;
+    
+    const listHighlights = activeUnit.highlights || [
+      'Stator-equipped high capacity structural safety core layers',
+      'Dual high-speed residential lift circulation core portals',
+      'Fully compliant double-staircase emergency exit systems',
+      'Anti-skid premium basalt flooring and wooden deck balconies'
+    ];
+    
+    listHighlights.forEach((h: string) => {
+      doc.text(`- ${h}`, marginX + 4, currentY);
+      currentY += 6;
+    });
+
+    // Pricing & Reservation Estimate Box (Gold highlighted)
+    doc.setFillColor(253, 250, 242);
+    doc.setDrawColor(cGold[0], cGold[1], cGold[2]);
+    doc.rect(marginX, 210, 170, 24, 'FD');
+
+    doc.setTextColor(cGold[0], cGold[1], cGold[2]);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.text('EXCLUSIVE RESERVATION VALUATION (Q2 2026 ESTIMATE)', marginX + 6, 216);
+
+    doc.setTextColor(cCharcoal[0], cCharcoal[1], cCharcoal[2]);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(15);
+    doc.text(`BDT ৳${activeFlatPrice.toFixed(2)} Lakhs`, marginX + 6, 225);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(cTextMuted[0], cTextMuted[1], cTextMuted[2]);
+    doc.text('* Exclusive of car parking spaces, gas/power connections, and central registry fees.', marginX + 6, 230);
+
+    // Footer Block
+    doc.setDrawColor(226, 232, 240);
+    doc.line(marginX, 255, 190, 255);
+
+    doc.setTextColor(cTextMuted[0], cTextMuted[1], cTextMuted[2]);
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.text('This sheet is a digital specification card issued on behalf of Abrar Tower-2 Development, Chittagong & Dhaka Registry Office.', marginX, 262);
+    doc.text('Official RAJUK registry coordinates are maintained under standard delta 10 katha plots codes. Double-glazing and structural standards apply.', marginX, 266);
+    doc.text('PRE-LAUNCH REGISTRATION SECURED • STAMP CODE: ATX-2026-DHAKA', marginX, 273);
+
+    // Save PDF
+    doc.save(`Abrar_Tower_Flat_${selectedFloor}0${['A', 'B', 'C', 'D'].indexOf(selectedUnitId) + 1}_Brochure.pdf`);
+  };
 
   // Filter & Search all 36 flats for the matrix & spreadsheet list
   const filteredFlats = allFlats.filter(flat => {
@@ -1043,9 +1202,6 @@ export default function FloorPlan() {
       flat.facing.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
-
-  const activeUnit = bespokeUnits.find(u => u.id === selectedUnitId) || bespokeUnits[0];
-  const activeFlatPrice = getFlatPriceNum(selectedFloor === 0 ? 1 : selectedFloor, activeUnit.basePriceNum);
 
   const getFloorName = (lvl: number) => {
     if (lvl === 0) return 'Ground Floor';
@@ -1978,6 +2134,73 @@ export default function FloorPlan() {
                         <path d="M 475 440 L 490 440 L 490 410 L 475 410" fill="none" stroke="#555" strokeWidth="0.8" />
                       </g>
                     )}
+
+                    {/* VISUAL DIMENSION LINES (SVG lines) FOR SELECTED UNIT */}
+                    {selectedFloor > 0 && selectedUnitId && (
+                      <g id="dimension-lines">
+                        {/* Render dimension lines based on active selected Unit */}
+                        {(() => {
+                          let hLine = { x1: 0, y1: 0, x2: 0, y2: 0, extY1: 0, extY2: 0, labelX: 0, labelY: 0, labelText: "" };
+                          let vLine = { x1: 0, y1: 0, x2: 0, y2: 0, extX1: 0, extX2: 0, labelX: 0, labelY: 0, labelText: "" };
+                          
+                          if (selectedUnitId === 'A') {
+                            hLine = { x1: 25, y1: 475, x2: 170, y2: 475, extY1: 465, extY2: 479, labelX: 97, labelY: 478, labelText: "29.0 FT WIDTH" };
+                            vLine = { x1: 15, y1: 320, x2: 15, y2: 465, extX1: 25, extX2: 11, labelX: 11, labelY: 392, labelText: "29.0 FT DEPTH" };
+                          } else if (selectedUnitId === 'B') {
+                            hLine = { x1: 330, y1: 475, x2: 475, y2: 475, extY1: 465, extY2: 479, labelX: 402, labelY: 478, labelText: "29.0 FT WIDTH" };
+                            vLine = { x1: 485, y1: 320, x2: 485, y2: 465, extX1: 475, extX2: 489, labelX: 489, labelY: 392, labelText: "29.0 FT DEPTH" };
+                          } else if (selectedUnitId === 'C') {
+                            hLine = { x1: 25, y1: 15, x2: 170, y2: 15, extY1: 35, extY2: 11, labelX: 97, labelY: 12, labelText: "29.0 FT WIDTH" };
+                            vLine = { x1: 15, y1: 35, x2: 15, y2: 180, extX1: 25, extX2: 11, labelX: 11, labelY: 107, labelText: "29.0 FT DEPTH" };
+                          } else if (selectedUnitId === 'D') {
+                            hLine = { x1: 330, y1: 15, x2: 475, y2: 15, extY1: 35, extY2: 11, labelX: 402, labelY: 12, labelText: "29.0 FT WIDTH" };
+                            vLine = { x1: 485, y1: 35, x2: 485, y2: 180, extX1: 475, extX2: 489, labelX: 489, labelY: 107, labelText: "29.0 FT DEPTH" };
+                          }
+
+                          return (
+                            <g className="transition-opacity duration-300">
+                              {/* Horizontal Dimension Line */}
+                              {/* Extension side lines */}
+                              <line x1={hLine.x1} y1={hLine.extY1} x2={hLine.x1} y2={hLine.extY2} stroke="rgba(212,175,55,0.4)" strokeWidth="0.8" strokeDasharray="1,2" />
+                              <line x1={hLine.x2} y1={hLine.extY1} x2={hLine.x2} y2={hLine.extY2} stroke="rgba(212,175,55,0.4)" strokeWidth="0.8" strokeDasharray="1,2" />
+                              
+                              {/* Main Horiz line */}
+                              <line x1={hLine.x1} y1={hLine.y1} x2={hLine.x2} y2={hLine.y2} stroke="#d4af37" strokeWidth="1" />
+                              
+                              {/* Slanted ticks */}
+                              <line x1={hLine.x1 - 3} y1={hLine.y1 + 3} x2={hLine.x1 + 3} y2={hLine.y1 - 3} stroke="#d4af37" strokeWidth="1" />
+                              <line x1={hLine.x2 - 3} y1={hLine.y2 + 3} x2={hLine.x2 + 3} y2={hLine.y2 - 3} stroke="#d4af37" strokeWidth="1" />
+                              
+                              {/* Shield Background for label */}
+                              <rect x={hLine.labelX - 25} y={hLine.y1 - 4} width="50" height="8" rx="1.5" fill="#090909" stroke="rgba(212,175,55,0.2)" strokeWidth="0.5" />
+                              <text x={hLine.labelX} y={hLine.y1 + 2.2} fill="#d4af37" textAnchor="middle" className="font-mono text-[5.5px] font-bold tracking-wider">
+                                {hLine.labelText}
+                              </text>
+
+                              {/* Vertical Dimension Line */}
+                              {/* Extension side lines */}
+                              <line x1={vLine.extX1} y1={vLine.y1} x2={vLine.extX2} y2={vLine.y1} stroke="rgba(212,175,55,0.4)" strokeWidth="0.8" strokeDasharray="1,2" />
+                              <line x1={vLine.extX1} y1={vLine.y2} x2={vLine.extX2} y2={vLine.y2} stroke="rgba(212,175,55,0.4)" strokeWidth="0.8" strokeDasharray="1,2" />
+
+                              {/* Main Vert line */}
+                              <line x1={vLine.x1} y1={vLine.y1} x2={vLine.x2} y2={vLine.y2} stroke="#d4af37" strokeWidth="1" />
+
+                              {/* Slanted ticks */}
+                              <line x1={vLine.x1 - 3} y1={vLine.y1 + 3} x2={vLine.x1 + 3} y2={vLine.y1 - 3} stroke="#d4af37" strokeWidth="1" />
+                              <line x1={vLine.x2 - 3} y1={vLine.y2 + 3} x2={vLine.x2 + 3} y2={vLine.y2 - 3} stroke="#d4af37" strokeWidth="1" />
+
+                              {/* Shield Background for vertical label */}
+                              <g transform={`translate(${vLine.x1}, ${vLine.labelY}) rotate(-90)`}>
+                                <rect x="-25" y="-4" width="50" height="8" rx="1.5" fill="#090909" stroke="rgba(212,175,55,0.2)" strokeWidth="0.5" />
+                                <text x="0" y="2.2" fill="#d4af37" textAnchor="middle" className="font-mono text-[5.5px] font-bold tracking-wider">
+                                  {vLine.labelText}
+                                </text>
+                              </g>
+                            </g>
+                          );
+                        })()}
+                      </g>
+                    )}
                   </svg>
 
                   {/* Wind / Compass Visualizer badge */}
@@ -2197,7 +2420,16 @@ export default function FloorPlan() {
                     )}
                   </div>
 
-                  <div className="mt-8">
+                  <div className="mt-8 space-y-2">
+                    {selectedFloor > 0 && (
+                      <button
+                        onClick={handleDownloadPDF}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-neutral-900/50 hover:bg-neutral-900/90 border border-neutral-800 hover:border-gold-400/40 rounded font-mono text-[9px] uppercase tracking-widest text-neutral-300 hover:text-gold-300 font-bold transition-all cursor-pointer"
+                      >
+                        <FileDown size={11} className="text-gold-400" />
+                        Download PDF Brochure
+                      </button>
+                    )}
                     <a 
                       href="#contact"
                       className="w-full text-center block px-4 py-3 bg-neutral-950 hover:bg-neutral-900 border border-gold-400/20 hover:border-gold-400/50 rounded font-mono text-2xs uppercase tracking-widest text-gold-300 font-semibold transition-all cursor-pointer"

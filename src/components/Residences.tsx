@@ -469,6 +469,26 @@ export default function Residences() {
                   return '~ 1.25 Crore BDT';
                 };
 
+                const getFlatStatus = (floor: number, unitCode: string): 'Available' | 'Reserved' | 'Sold' => {
+                  const sum = floor * 3 + unitCode.charCodeAt(0);
+                  const hash = sum % 7;
+                  if (hash === 1 || hash === 4) return 'Reserved';
+                  if (hash === 0 || hash === 3 || hash === 5) return 'Sold';
+                  return 'Available';
+                };
+
+                const getFlatReservedDates = (floor: number, unitCode: string): string[] => {
+                  const status = getFlatStatus(floor, unitCode);
+                  if (status === 'Available') return [];
+                  const day = ((floor * 7 + unitCode.charCodeAt(0)) % 20) + 5;
+                  const month = ((floor + unitCode.charCodeAt(0)) % 3) + 6; // June, July, August 2026
+                  return [
+                    `2026-0${month}-${day < 10 ? '0' + day : day}`,
+                    `2026-0${month}-${(day + 1) < 10 ? '0' + (day + 1) : (day + 1)}`,
+                    `2026-0${month}-${(day + 2) < 10 ? '0' + (day + 2) : (day + 2)}`
+                  ];
+                };
+
                 return (
                   <div className="overflow-x-auto border border-neutral-800 rounded-lg w-full">
                     <table className="w-full text-left font-sans text-xs border-collapse text-neutral-300 min-w-[600px]">
@@ -514,6 +534,57 @@ export default function Residences() {
                           <td className="p-3 font-mono text-neutral-500">IDEAL FOR</td>
                           <td className="p-3 text-neutral-400 bg-gold-400/5">{u1.idealFor}</td>
                           <td className="p-3 text-neutral-400">{u2.idealFor}</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-mono text-neutral-500">BOOKED APARTMENTS & RESERVED DATES</td>
+                          <td className="p-3 bg-gold-400/5 font-mono text-[10px] text-neutral-400">
+                            <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                              {Array.from({ length: 9 }, (_, idx) => {
+                                const floor = idx + 1;
+                                const status = getFlatStatus(floor, u1.id);
+                                if (status === 'Available') return null;
+                                const flatId = `${floor}0${['A', 'B', 'C', 'D'].indexOf(u1.id) + 1}`;
+                                const dates = getFlatReservedDates(floor, u1.id);
+                                return (
+                                  <div key={flatId} className="flex flex-col sm:flex-row justify-between sm:items-center border-b border-neutral-800/40 pb-1.5 pt-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-bold text-white"># {flatId}</span>
+                                      <span className={`px-1 rounded text-[7.5px] font-bold tracking-wider uppercase ${status === 'Reserved' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                        {status}
+                                      </span>
+                                    </div>
+                                    <span className="text-neutral-500 text-[8.5px] font-mono mt-0.5 sm:mt-0">
+                                      {dates.join(' // ')}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </td>
+                          <td className="p-3 font-mono text-[10px] text-neutral-400">
+                            <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                              {Array.from({ length: 9 }, (_, idx) => {
+                                const floor = idx + 1;
+                                const status = getFlatStatus(floor, u2.id);
+                                if (status === 'Available') return null;
+                                const flatId = `${floor}0${['A', 'B', 'C', 'D'].indexOf(u2.id) + 1}`;
+                                const dates = getFlatReservedDates(floor, u2.id);
+                                return (
+                                  <div key={flatId} className="flex flex-col sm:flex-row justify-between sm:items-center border-b border-neutral-800/40 pb-1.5 pt-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-bold text-white"># {flatId}</span>
+                                      <span className={`px-1 rounded text-[7.5px] font-bold tracking-wider uppercase ${status === 'Reserved' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                        {status}
+                                      </span>
+                                    </div>
+                                    <span className="text-neutral-500 text-[8.5px] font-mono mt-0.5 sm:mt-0">
+                                      {dates.join(' // ')}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </td>
                         </tr>
                         <tr className="bg-neutral-950/40">
                           <td className="p-3 font-mono text-gold-400 font-bold">ESTIMATION RANGE</td>
