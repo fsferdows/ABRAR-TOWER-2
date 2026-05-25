@@ -3584,6 +3584,12 @@ export default function FloorPlan() {
                         <span className="text-neutral-500">FACING DIRECTION:</span>
                         <span className="text-neutral-200 truncate max-w-[110px]">{hoveredUnitData.facing}</span>
                       </div>
+                      <div className="flex justify-between">
+                        <span className="text-neutral-500">EST. PRICE:</span>
+                        <span className="text-gold-300 font-bold">
+                          ৳{getFlatPriceNum(selectedFloor === 0 ? 1 : selectedFloor, hoveredUnitData.basePriceNum).toFixed(2)} Lakh
+                        </span>
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -3617,10 +3623,10 @@ export default function FloorPlan() {
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`${selectedFloor}-${selectedUnitId}`}
-                  initial={{ opacity: 0, x: 15 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -15 }}
-                  transition={{ duration: 0.15 }}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                   className="bg-neutral-900/40 p-6 rounded-xl border border-neutral-850 flex-grow flex flex-col justify-between"
                 >
                   <div>
