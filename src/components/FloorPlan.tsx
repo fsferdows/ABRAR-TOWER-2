@@ -335,15 +335,20 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
 
     // Materials definitions with authentic architectural texture looks
     const matSetbacks = new THREE.MeshStandardMaterial({ color: 0xd4af37, transparent: true, opacity: 0.12, wireframe: true });
-    const matColumns = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5, metalness: 0.4 });
-    const matCoreArea = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.5, metalness: 0.1 });
+    const matColumns = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5, metalness: 0.4, transparent: true, opacity: 1.0 });
+    const matCoreArea = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.5, metalness: 0.1, transparent: true, opacity: 1.0 });
     const matFrontFlats = new THREE.MeshStandardMaterial({ color: 0xb58e2d, transparent: true, opacity: 0.75, roughness: 0.3 }); // Unit A/B Golden
     const matRearFlats = new THREE.MeshStandardMaterial({ color: 0x7c3aed, transparent: true, opacity: 0.75, roughness: 0.3 }); // Unit C/D Purple
     const matGlassCurtain = new THREE.MeshStandardMaterial({ color: 0x0ea5e9, transparent: true, opacity: 0.45, roughness: 0.05, metalness: 0.9 });
-    const matLouvers = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 });
-    const matOasisTurf = new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.9 });
-    const matSlabFloor = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 });
+    const matLouvers = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6, transparent: true, opacity: 1.0 });
+    const matOasisTurf = new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.9, transparent: true, opacity: 1.0 });
     const matSetbackDanger = new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.15 });
+
+    // 4 Distinct Slab types/materials to color-code vertical tiers of the G+9 tower (Clearly Visible & Understandable)
+    const matSlabGround = new THREE.MeshStandardMaterial({ color: 0x111625, roughness: 0.95, transparent: true, opacity: 1.0 }); // Ground Floor Asphalt & Pavers
+    const matSlabExecutive = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.70, transparent: true, opacity: 1.0 }); // Levels 1 to 3 Executive
+    const matSlabPanoramic = new THREE.MeshStandardMaterial({ color: 0x3d301b, roughness: 0.50, transparent: true, opacity: 1.0 }); // Levels 4 to 7 Panoramic (Crema Beige look)
+    const matSlabPenthouse = new THREE.MeshStandardMaterial({ color: 0x5c4c23, roughness: 0.30, metalness: 0.1, transparent: true, opacity: 1.0 }); // Levels 8 to 9 Penthouse (White & Gold)
 
     const floorHeight = 3.2; 
     const totalStoreys = 10;
@@ -463,9 +468,15 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
         flatsGroup.add(lLeft, lRight);
       }
 
-      // Solid Slabs
+      // 4-Layers Color-coded vertical tiers of floor slabs
+      let slabMat = matSlabExecutive;
+      if (tier === 0) slabMat = matSlabGround;
+      else if (tier >= 1 && tier <= 3) slabMat = matSlabExecutive;
+      else if (tier >= 4 && tier <= 7) slabMat = matSlabPanoramic;
+      else if (tier >= 8) slabMat = matSlabPenthouse;
+
       const floorSlabGeo = new THREE.BoxGeometry(33.8, 0.12, 31.8);
-      const slabMesh = new THREE.Mesh(floorSlabGeo, matSlabFloor);
+      const slabMesh = new THREE.Mesh(floorSlabGeo, slabMat);
       slabMesh.position.set(0, currentY + floorHeight, 0);
       slabMesh.receiveShadow = true;
       completeBuildingGroup.add(slabMesh);
@@ -614,35 +625,109 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
       // Notify React parent system cleanly
       window.parent.postMessage({ type: '3d-step', step: stageId }, '*');
 
-      // Simple visibilities management
+      // Keep all architectural groups visible for fully interconnected representation 
       structuralBaseGroup.visible = true;
       columnsGroup.visible = true;
       coreGroup.visible = true;
       flatsGroup.visible = true;
       roofGroup.visible = true;
 
+      // Reset all opacities first to fully solid
+      matColumns.opacity = 1.0;
+      matCoreArea.opacity = 1.0;
+      matFrontFlats.opacity = 0.75;
+      matRearFlats.opacity = 0.75;
+      matLouvers.opacity = 1.0;
+      matGlassCurtain.opacity = 0.45;
+      matOasisTurf.opacity = 1.0;
+      matSlabGround.opacity = 1.0;
+      matSlabExecutive.opacity = 1.0;
+      matSlabPanoramic.opacity = 1.0;
+      matSlabPenthouse.opacity = 1.0;
+
       switch(stageId) {
-        case 'step1': // Plot setbacks
-          columnsGroup.visible = false; coreGroup.visible = false; flatsGroup.visible = false; roofGroup.visible = false;
+        case 'step1': // Plot setbacks - Dim all upper residential systems to ghost layers
+          matColumns.opacity = 0.05;
+          matCoreArea.opacity = 0.05;
+          matFrontFlats.opacity = 0.02;
+          matRearFlats.opacity = 0.02;
+          matLouvers.opacity = 0.05;
+          matGlassCurtain.opacity = 0.03;
+          matOasisTurf.opacity = 0.05;
+          matSlabGround.opacity = 0.4;
+          matSlabExecutive.opacity = 0.02;
+          matSlabPanoramic.opacity = 0.02;
+          matSlabPenthouse.opacity = 0.02;
           smoothCameraTransition(0, 32, 65, 0, 8, 0);
           break;
-        case 'step2': // Column matrix
-          coreGroup.visible = false; flatsGroup.visible = false; roofGroup.visible = false;
+        case 'step2': // Column matrix - Set columns to full strength, others to faint dust outlines
+          matColumns.opacity = 1.0;
+          matCoreArea.opacity = 0.1;
+          matFrontFlats.opacity = 0.02;
+          matRearFlats.opacity = 0.02;
+          matLouvers.opacity = 0.1;
+          matGlassCurtain.opacity = 0.03;
+          matOasisTurf.opacity = 0.05;
+          matSlabGround.opacity = 0.1;
+          matSlabExecutive.opacity = 0.1;
+          matSlabPanoramic.opacity = 0.1;
+          matSlabPenthouse.opacity = 0.1;
           smoothCameraTransition(-35, 18, 45, 0, 16, 0);
           break;
-        case 'step3': // Elevator core
-          columnsGroup.visible = false; flatsGroup.visible = false; roofGroup.visible = false;
+        case 'step3': // Elevator core - Core full opacity, rest translucent
+          matColumns.opacity = 0.1;
+          matCoreArea.opacity = 1.0;
+          matFrontFlats.opacity = 0.02;
+          matRearFlats.opacity = 0.02;
+          matLouvers.opacity = 0.1;
+          matGlassCurtain.opacity = 0.03;
+          matOasisTurf.opacity = 0.05;
+          matSlabGround.opacity = 0.1;
+          matSlabExecutive.opacity = 0.1;
+          matSlabPanoramic.opacity = 0.1;
+          matSlabPenthouse.opacity = 0.1;
           smoothCameraTransition(15, 38, 38, 0, 15, 0);
           break;
-        case 'step4': // Typical floors
-          roofGroup.visible = false;
+        case 'step4': // Typical floors layout
+          matColumns.opacity = 0.15;
+          matCoreArea.opacity = 0.25;
+          matFrontFlats.opacity = 0.85;
+          matRearFlats.opacity = 0.85;
+          matLouvers.opacity = 0.7;
+          matGlassCurtain.opacity = 0.45;
+          matOasisTurf.opacity = 0.1;
+          matSlabGround.opacity = 0.15;
+          matSlabExecutive.opacity = 0.85;
+          matSlabPanoramic.opacity = 0.85;
+          matSlabPenthouse.opacity = 0.85;
           smoothCameraTransition(42, 38, 48, 0, 18, 0);
           break;
-        case 'step5': // Parking levels
-          flatsGroup.visible = false; roofGroup.visible = false;
+        case 'step5': // Parking levels (Ground)
+          matColumns.opacity = 0.4;
+          matCoreArea.opacity = 0.15;
+          matFrontFlats.opacity = 0.05;
+          matRearFlats.opacity = 0.05;
+          matLouvers.opacity = 0.2;
+          matGlassCurtain.opacity = 0.05;
+          matOasisTurf.opacity = 0.05;
+          matSlabGround.opacity = 1.0;
+          matSlabExecutive.opacity = 0.05;
+          matSlabPanoramic.opacity = 0.05;
+          matSlabPenthouse.opacity = 0.05;
           smoothCameraTransition(36, 10, 30, 0, 2, 0);
           break;
         case 'step6': // Garden roofscape
+          matColumns.opacity = 0.1;
+          matCoreArea.opacity = 0.1;
+          matFrontFlats.opacity = 0.05;
+          matRearFlats.opacity = 0.05;
+          matLouvers.opacity = 0.3;
+          matGlassCurtain.opacity = 0.3;
+          matOasisTurf.opacity = 1.0;
+          matSlabGround.opacity = 0.08;
+          matSlabExecutive.opacity = 0.08;
+          matSlabPanoramic.opacity = 0.08;
+          matSlabPenthouse.opacity = 1.0;
           smoothCameraTransition(0, 48, 40, 0, 32, 0);
           break;
         case 'all':
@@ -1656,19 +1741,42 @@ export default function FloorPlan() {
                             stroke={selectedUnitId === 'A' ? '#d4af37' : hoveredZone === 'A' ? '#b8946f' : '#2e2e2e'} 
                             strokeWidth="1.5"
                           />
-                          <text x="97" y="390" textAnchor="middle" className="font-serif text-sm font-bold" fill={selectedUnitId === 'A' ? '#d4af37' : '#aaa'}>
+                          {/* CAD Room Partitions for Unit A */}
+                          <g stroke={selectedUnitId === 'A' ? 'rgba(212,175,55,0.45)' : '#2d2d2d'} strokeWidth="0.8" fill="none">
+                            <line x1="25" y1="390" x2="90" y2="390" />
+                            <line x1="90" y1="390" x2="90" y2="465" />
+                            <line x1="25" y1="360" x2="65" y2="360" />
+                            <line x1="65" y1="360" x2="65" y2="390" />
+                            <line x1="90" y1="410" x2="135" y2="410" />
+                            <line x1="135" y1="410" x2="135" y2="465" />
+                            <line x1="65" y1="320" x2="65" y2="350" />
+                            <line x1="25" y1="350" x2="95" y2="350" />
+                            <line x1="135" y1="395" x2="170" y2="395" />
+                            <line x1="135" y1="320" x2="135" y2="355" />
+                          </g>
+                          <g fill={selectedUnitId === 'A' ? '#d4af37' : '#777'} fontSize="4.5" fontFamily="monospace" textAnchor="middle" opacity="0.9">
+                            <text x="57" y="425" fontWeight="bold">M. BED</text>
+                            <text x="45" y="377">TOILET 1</text>
+                            <text x="112" y="440">BED 2</text>
+                            <text x="152" y="415">KITCHEN</text>
+                            <text x="132" y="340" fontSize="5" fontWeight="bold">LIV / DINING</text>
+                            <text x="80" y="337">TOILET 2</text>
+                            <text x="17" y="425" fontSize="3.5">BALC</text>
+                          </g>
+
+                          <text x="97" y="365" textAnchor="middle" className="font-serif text-[9px] font-bold" fill={selectedUnitId === 'A' ? '#d4af37' : '#aaa'}>
                             Flat {selectedFloor}A
                           </text>
-                          <text x="97" y="408" textAnchor="middle" className="font-mono text-[7px]" fill="#555">
-                            920 SQ FT // 2 BHK
+                          <text x="97" y="375" textAnchor="middle" className="font-mono text-[5px]" fill="#555">
+                            920 SQ FT // 3 Bed 2 Bath
                           </text>
 
                           {/* Unit status tag visual circle */}
-                          <circle cx="45" cy="340" r="3.5" fill={
+                          <circle cx="45" cy="340" r="3" fill={
                             getFlatStatus(selectedFloor, 'A') === 'Available' ? '#10b981' : 
                             getFlatStatus(selectedFloor, 'A') === 'Reserved' ? '#f59e0b' : '#3f3f46'
                           } />
-                          <text x="54" y="342" className="font-mono text-[6.5px]" fill="#777">{getFlatStatus(selectedFloor, 'A')}</text>
+                          <text x="52" y="342" className="font-mono text-[5.5px]" fill="#777">{getFlatStatus(selectedFloor, 'A')}</text>
                         </g>
 
                         {/* Unit B: South-East Corner (Front) */}
@@ -1697,19 +1805,42 @@ export default function FloorPlan() {
                             stroke={selectedUnitId === 'B' ? '#d4af37' : hoveredZone === 'B' ? '#b8946f' : '#2e2e2e'} 
                             strokeWidth="1.5"
                           />
-                          <text x="402" y="390" textAnchor="middle" className="font-serif text-sm font-bold" fill={selectedUnitId === 'B' ? '#d4af37' : '#aaa'}>
+                          {/* CAD Room Partitions for Unit B */}
+                          <g stroke={selectedUnitId === 'B' ? 'rgba(212,175,55,0.45)' : '#2d2d2d'} strokeWidth="0.8" fill="none">
+                            <line x1="410" y1="390" x2="475" y2="390" />
+                            <line x1="410" y1="390" x2="410" y2="465" />
+                            <line x1="435" y1="360" x2="475" y2="360" />
+                            <line x1="435" y1="360" x2="435" y2="390" />
+                            <line x1="365" y1="410" x2="410" y2="410" />
+                            <line x1="365" y1="410" x2="365" y2="465" />
+                            <line x1="405" y1="320" x2="405" y2="350" />
+                            <line x1="405" y1="350" x2="475" y2="350" />
+                            <line x1="330" y1="395" x2="365" y2="395" />
+                            <line x1="365" y1="320" x2="365" y2="355" />
+                          </g>
+                          <g fill={selectedUnitId === 'B' ? '#d4af37' : '#777'} fontSize="4.5" fontFamily="monospace" textAnchor="middle" opacity="0.9">
+                            <text x="443" y="425" fontWeight="bold">M. BED</text>
+                            <text x="455" y="377">TOILET 1</text>
+                            <text x="388" y="440">BED 2</text>
+                            <text x="348" y="415">KITCHEN</text>
+                            <text x="368" y="340" fontSize="5" fontWeight="bold">LIV / DINING</text>
+                            <text x="420" y="337">TOILET 2</text>
+                            <text x="482" y="425" fontSize="3.5">BALC</text>
+                          </g>
+
+                          <text x="402" y="365" textAnchor="middle" className="font-serif text-[9px] font-bold" fill={selectedUnitId === 'B' ? '#d4af37' : '#aaa'}>
                             Flat {selectedFloor}B
                           </text>
-                          <text x="402" y="408" textAnchor="middle" className="font-mono text-[7px]" fill="#555">
-                            920 SQ FT // 2 BHK
+                          <text x="402" y="375" textAnchor="middle" className="font-mono text-[5px]" fill="#555">
+                            920 SQ FT // 3 Bed 2 Bath
                           </text>
 
                           {/* Unit status tag visual circle */}
-                          <circle cx="350" cy="340" r="3.5" fill={
+                          <circle cx="350" cy="340" r="3" fill={
                             getFlatStatus(selectedFloor, 'B') === 'Available' ? '#10b981' : 
                             getFlatStatus(selectedFloor, 'B') === 'Reserved' ? '#f59e0b' : '#3f3f46'
                           } />
-                          <text x="359" y="342" className="font-mono text-[6.5px]" fill="#777">{getFlatStatus(selectedFloor, 'B')}</text>
+                          <text x="357" y="342" className="font-mono text-[5.5px]" fill="#777">{getFlatStatus(selectedFloor, 'B')}</text>
                         </g>
 
                         {/* Unit C: North-West Corner (Rear) */}
@@ -1738,19 +1869,42 @@ export default function FloorPlan() {
                             stroke={selectedUnitId === 'C' ? '#d4af37' : hoveredZone === 'C' ? '#b8946f' : '#2e2e2e'} 
                             strokeWidth="1.5"
                           />
-                          <text x="97" y="105" textAnchor="middle" className="font-serif text-sm font-bold" fill={selectedUnitId === 'C' ? '#d4af37' : '#aaa'}>
+                          {/* CAD Room Partitions for Unit C */}
+                          <g stroke={selectedUnitId === 'C' ? 'rgba(212,175,55,0.45)' : '#2d2d2d'} strokeWidth="0.8" fill="none">
+                            <line x1="25" y1="110" x2="90" y2="110" />
+                            <line x1="90" y1="35" x2="90" y2="110" />
+                            <line x1="25" y1="145" x2="65" y2="145" />
+                            <line x1="65" y1="110" x2="65" y2="145" />
+                            <line x1="90" y1="90" x2="135" y2="90" />
+                            <line x1="135" y1="35" x2="135" y2="90" />
+                            <line x1="65" y1="145" x2="65" y2="180" />
+                            <line x1="25" y1="145" x2="95" y2="145" />
+                            <line x1="135" y1="110" x2="170" y2="110" />
+                            <line x1="135" y1="145" x2="135" y2="180" />
+                          </g>
+                          <g fill={selectedUnitId === 'C' ? '#d4af37' : '#777'} fontSize="4.5" fontFamily="monospace" textAnchor="middle" opacity="0.9">
+                            <text x="57" y="70" fontWeight="bold">M. BED</text>
+                            <text x="45" y="128">TOILET 1</text>
+                            <text x="112" y="62">BED 2</text>
+                            <text x="152" y="88">KITCHEN</text>
+                            <text x="132" y="160" fontSize="5" fontWeight="bold">LIV / DINING</text>
+                            <text x="80" y="162">TOILET 2</text>
+                            <text x="17" y="52" fontSize="3.5">BALC</text>
+                          </g>
+
+                          <text x="97" y="100" textAnchor="middle" className="font-serif text-[9px] font-bold" fill={selectedUnitId === 'C' ? '#d4af37' : '#aaa'}>
                             Flat {selectedFloor}C
                           </text>
-                          <text x="97" y="123" textAnchor="middle" className="font-mono text-[7px]" fill="#555">
-                            880 SQ FT // 2 BHK
+                          <text x="97" y="110" textAnchor="middle" className="font-mono text-[5px]" fill="#555">
+                            880 SQ FT // 3 Bed 2 Bath
                           </text>
 
                           {/* Unit status tag visual circle */}
-                          <circle cx="45" cy="55" r="3.5" fill={
+                          <circle cx="45" cy="55" r="3" fill={
                             getFlatStatus(selectedFloor, 'C') === 'Available' ? '#10b981' : 
                             getFlatStatus(selectedFloor, 'C') === 'Reserved' ? '#f59e0b' : '#3f3f46'
                           } />
-                          <text x="54" y="57" className="font-mono text-[6.5px]" fill="#777">{getFlatStatus(selectedFloor, 'C')}</text>
+                          <text x="52" y="57" className="font-mono text-[5.5px]" fill="#777">{getFlatStatus(selectedFloor, 'C')}</text>
                         </g>
 
                         {/* Unit D: North-East Corner (Rear) */}
@@ -1779,19 +1933,42 @@ export default function FloorPlan() {
                             stroke={selectedUnitId === 'D' ? '#d4af37' : hoveredZone === 'D' ? '#b8946f' : '#2e2e2e'} 
                             strokeWidth="1.5"
                           />
-                          <text x="402" y="105" textAnchor="middle" className="font-serif text-sm font-bold" fill={selectedUnitId === 'D' ? '#d4af37' : '#aaa'}>
+                          {/* CAD Room Partitions for Unit D */}
+                          <g stroke={selectedUnitId === 'D' ? 'rgba(212,175,55,0.45)' : '#2d2d2d'} strokeWidth="0.8" fill="none">
+                            <line x1="410" y1="110" x2="475" y2="110" />
+                            <line x1="410" y1="35" x2="410" y2="110" />
+                            <line x1="435" y1="145" x2="475" y2="145" />
+                            <line x1="435" y1="110" x2="435" y2="145" />
+                            <line x1="365" y1="90" x2="410" y2="90" />
+                            <line x1="365" y1="35" x2="365" y2="90" />
+                            <line x1="405" y1="145" x2="405" y2="180" />
+                            <line x1="405" y1="145" x2="475" y2="145" />
+                            <line x1="330" y1="110" x2="365" y2="110" />
+                            <line x1="365" y1="145" x2="365" y2="180" />
+                          </g>
+                          <g fill={selectedUnitId === 'D' ? '#d4af37' : '#777'} fontSize="4.5" fontFamily="monospace" textAnchor="middle" opacity="0.9">
+                            <text x="443" y="70" fontWeight="bold">M. BED</text>
+                            <text x="455" y="128">TOILET 1</text>
+                            <text x="388" y="62">BED 2</text>
+                            <text x="348" y="88">KITCHEN</text>
+                            <text x="368" y="160" fontSize="5" fontWeight="bold">LIV / DINING</text>
+                            <text x="420" y="162">TOILET 2</text>
+                            <text x="482" y="52" fontSize="3.5">BALC</text>
+                          </g>
+
+                          <text x="402" y="100" textAnchor="middle" className="font-serif text-[9px] font-bold" fill={selectedUnitId === 'D' ? '#d4af37' : '#aaa'}>
                             Flat {selectedFloor}D
                           </text>
-                          <text x="402" y="123" textAnchor="middle" className="font-mono text-[7px]" fill="#555">
-                            880 SQ FT // 2 BHK
+                          <text x="402" y="110" textAnchor="middle" className="font-mono text-[5px]" fill="#555">
+                            880 SQ FT // 3 Bed 2 Bath
                           </text>
 
                           {/* Unit status tag visual circle */}
-                          <circle cx="350" cy="55" r="3.5" fill={
+                          <circle cx="350" cy="55" r="3" fill={
                             getFlatStatus(selectedFloor, 'D') === 'Available' ? '#10b981' : 
                             getFlatStatus(selectedFloor, 'D') === 'Reserved' ? '#f59e0b' : '#3f3f46'
                           } />
-                          <text x="359" y="57" className="font-mono text-[6.5px]" fill="#777">{getFlatStatus(selectedFloor, 'D')}</text>
+                          <text x="357" y="57" className="font-mono text-[5.5px]" fill="#777">{getFlatStatus(selectedFloor, 'D')}</text>
                         </g>
 
                         {/* Balconies CAD Lines Outlines */}
@@ -1938,7 +2115,7 @@ export default function FloorPlan() {
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-4 text-xs font-sans text-neutral-400">
+                      <div className="space-y-4 text-xs font-sans text-neutral-400 animate-fadeIn">
                         <div>
                           <span className="block text-neutral-500 text-[8px] font-mono uppercase mb-0.5">TARGET HOME PROFILE</span>
                           <p className="text-neutral-200 leading-relaxed font-light">{activeUnit.idealFor}</p>
@@ -1946,7 +2123,7 @@ export default function FloorPlan() {
 
                         <div className="grid grid-cols-2 gap-3 border-y border-neutral-800 py-3 font-mono text-[10px]">
                           <div>
-                            <span className="text-neutral-500 block text-[8px] font-sans">NET INTERIOR PLOT</span>
+                            <span className="text-neutral-500 block text-[8px] font-sans">NET USEABLE AREA</span>
                             <span className="text-white font-semibold flex items-center gap-1 mt-0.5">
                               <Square size={10} className="text-gold-400" />
                               {activeUnit.sizeSqFt} SQ FT
@@ -1966,6 +2143,45 @@ export default function FloorPlan() {
                             <span className="text-neutral-500 block text-[8px] font-sans">TOTAL VERANDAS</span>
                             <span className="text-neutral-300 font-bold block mt-0.5">{activeUnit.verandas} Attached Bays</span>
                           </div>
+                        </div>
+
+                        {/* SPECIFIC ROOM FLOORINGS & FINISHES */}
+                        <div className="p-3 bg-neutral-950/60 rounded border border-neutral-850/60 space-y-2">
+                          <span className="text-neutral-500 block text-[8px] font-mono uppercase tracking-widest">FLOOR SELECTIONS & SPECIFICATIONS</span>
+                          <div className="space-y-1 text-[9.5px] font-mono text-neutral-300 border-t border-neutral-900 pt-1.5">
+                            <div className="flex justify-between">
+                              <span className="text-neutral-500 font-sans">LIV & DINING:</span>
+                              <span className="text-neutral-200 text-right">Greek Pentelikon Marble slab</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-neutral-500 font-sans">MASTER M.BED:</span>
+                              <span className="text-neutral-200 text-right">Italian Statuario White Marble</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-neutral-500 font-sans">SECONDARY BED:</span>
+                              <span className="text-neutral-200 text-right">RAK Vitrified 800x800mm Slabs</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-neutral-500 font-sans">KITCHEN CENTRE:</span>
+                              <span className="text-gold-300 text-right">Galaxy Black Granite finish</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-neutral-500 font-sans">BATH TOILETS:</span>
+                              <span className="text-neutral-200 text-right">Anti-skid Matte Basalt tile</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-neutral-500 font-sans">ATTACHED BALC:</span>
+                              <span className="text-neutral-200 text-right">Brazilian Teak Wood Decking</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 10 KATHA LAND PLOT OPTIMIZATION & MAX BUILDING EXPANSION */}
+                        <div className="p-3 bg-neutral-900/30 rounded border border-neutral-850/40 space-y-1.5">
+                          <span className="text-neutral-500 block text-[8px] font-mono uppercase tracking-widest">10 KATHA SPACE MAXIMIZATION</span>
+                          <p className="text-[10px] text-neutral-400 font-light leading-relaxed font-sans">
+                            The net building footprint is fully expanded to **60% Maximum Ground Coverage (MGC)** of the **7,200 sq ft (10 Katha)** land plot. This results in an optimized floor plate built of **4,320 sq ft** per level, maximizing saleable carpet area in complete compliance with Dhaka RAJUK building code.
+                          </p>
                         </div>
 
                         <div className="p-3 bg-neutral-950/90 rounded border border-neutral-850">
