@@ -1,0 +1,6 @@
+{
+  "name": "Abrar Tower-2",
+  "description": "A premium 10-storied residential experience in Uttara, Dhaka, offering 36 premium corner apartments with grand spaces and a modern rooftop community.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
