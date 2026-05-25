@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, X, Landmark, PhoneCall } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface HeaderProps {
   activeSection: string;
@@ -15,14 +16,16 @@ interface HeaderProps {
 export default function Header({ activeSection, onNavigate }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
 
   const navLinks = [
-    { label: 'Home', id: 'home' },
-    { label: 'The Vision', id: 'vision' },
-    { label: 'Residences', id: 'residences' },
-    { label: 'Floor Plan', id: 'floorplan' },
-    { label: 'Location', id: 'location' },
-    { label: 'Contact', id: 'contact' },
+    { label: t('nav.home'), id: 'home' },
+    { label: t('nav.vision'), id: 'vision' },
+    { label: t('nav.residences'), id: 'residences' },
+    { label: t('nav.floorplan'), id: 'floorplan' },
+    { label: t('nav.builder'), id: 'builder' },
+    { label: t('nav.location'), id: 'location' },
+    { label: t('nav.contact'), id: 'contact' },
   ];
 
   useEffect(() => {
@@ -96,32 +99,76 @@ export default function Header({ activeSection, onNavigate }: HeaderProps) {
 
           <div className="h-4 w-[1px] bg-neutral-700" />
 
+          {/* Quiet-Luxury Language Toggle */}
+          <div className="flex items-center gap-1.5 font-mono text-[10px] select-none bg-neutral-950/40 border border-neutral-750/30 rounded px-2.5 py-1">
+            <button
+              onClick={() => setLanguage('en')}
+              className={`hover:text-gold-300 transition-colors cursor-pointer ${
+                language === 'en' ? 'text-gold-450 font-bold' : 'text-neutral-500'
+              }`}
+            >
+              EN
+            </button>
+            <span className="text-neutral-800">|</span>
+            <button
+              onClick={() => setLanguage('bn')}
+              className={`hover:text-gold-300 transition-colors cursor-pointer ${
+                language === 'bn' ? 'text-gold-400 font-bold' : 'text-neutral-500'
+              }`}
+            >
+              বাংলা
+            </button>
+          </div>
+
+          <div className="h-4 w-[1px] bg-neutral-700" />
+
           {/* Contact Action Button */}
           <button
             onClick={() => handleLinkClick('contact')}
             className="flex items-center gap-2 px-5 py-2 rounded border border-gold-400/40 text-gold-300 text-xs font-mono uppercase tracking-widest hover:bg-gold-400 hover:text-neutral-900 hover:border-gold-400 active:scale-95 transition-all duration-300"
           >
             <PhoneCall size={12} />
-            <span>Secure Share</span>
+            <span>{t('hero.cta.contact')}</span>
           </button>
         </nav>
 
         {/* Mobile Navigation Trigger */}
         <div className="flex md:hidden items-center gap-3">
+          {/* Mobile Language Selector Inline */}
+          <div className="flex items-center gap-1 font-mono text-[9px] bg-neutral-950/60 border border-neutral-800 rounded px-2 py-0.5 select-none">
+            <button
+              onClick={() => setLanguage('en')}
+              className={`px-1 hover:text-gold-300 transition-colors ${
+                language === 'en' ? 'text-gold-400 font-bold' : 'text-neutral-500'
+              }`}
+            >
+              EN
+            </button>
+            <span className="text-neutral-800">|</span>
+            <button
+              onClick={() => setLanguage('bn')}
+              className={`px-1 hover:text-gold-305 transition-colors ${
+                language === 'bn' ? 'text-gold-400 font-bold' : 'text-neutral-500'
+              }`}
+            >
+              বাংলা
+            </button>
+          </div>
+
           <button
             onClick={() => handleLinkClick('contact')}
-            className="p-2 rounded border border-gold-400/20 text-gold-300 hover:bg-gold-950/20 active:scale-95"
+            className="p-1.5 rounded border border-gold-400/20 text-gold-300 hover:bg-gold-950/20 active:scale-95"
             aria-label="Direct Contact"
           >
-            <PhoneCall size={16} />
+            <PhoneCall size={13} />
           </button>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2 rounded text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-gold-300"
+            className="p-1.5 rounded text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-gold-300"
             aria-expanded={isOpen}
             aria-label="Toggle navigation menu"
           >
-            {isOpen ? <X size={20} /> : <Menu size={20} />}
+            {isOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
       </div>
@@ -162,7 +209,7 @@ export default function Header({ activeSection, onNavigate }: HeaderProps) {
                   className="w-full py-3 rounded bg-gold-500 hover:bg-gold-600 text-neutral-950 font-bold text-center flex items-center justify-center gap-2 font-sans tracking-wide"
                 >
                   <PhoneCall size={14} />
-                  <span>Discover residences</span>
+                  <span>{t('hero.cta.discover')}</span>
                 </button>
               </div>
             </div>

@@ -13,6 +13,7 @@ import Location from './components/Location';
 import Contact from './components/Contact';
 import LeadCenter from './components/LeadCenter';
 import PhoneChatbot from './components/PhoneChatbot';
+import BuilderConsole from './components/BuilderConsole';
 import { ShieldCheck, Compass, ArrowUpRight, ShieldAlert, Award } from 'lucide-react';
 
 export default function App() {
@@ -23,7 +24,7 @@ export default function App() {
   // Dynamic automatic active section tracking via scroll offsets
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['home', 'vision', 'residences', 'floorplan', 'location', 'contact'];
+      const sections = ['home', 'vision', 'residences', 'floorplan', 'builder', 'location', 'contact'];
       const scrollPos = window.scrollY + 160; // Offset for header
 
       for (const section of sections) {
@@ -84,6 +85,9 @@ export default function App() {
         {/* Section 3.5: Entire Interactive Layer Floor Explorer with Elevator simulation */}
         <FloorPlan />
 
+        {/* Section 3.8: Builder & Joint Venture Console with Real FAR calculators */}
+        <BuilderConsole />
+
         {/* Section 4: Physical Address & Bespoke Cartography Map */}
         <Location />
 
@@ -123,6 +127,12 @@ export default function App() {
               className="hover:text-gold-300 transition-colors cursor-pointer"
             >
               Residences
+            </button>
+            <button
+              onClick={() => handleNavigate('builder')}
+              className="hover:text-gold-300 transition-colors cursor-pointer"
+            >
+              Builder Spec
             </button>
             <button
               onClick={() => handleNavigate('location')}

@@ -6,24 +6,31 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Compass, Sun, Wind, ShieldCheck, TreePine, Sparkles, Building2 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Vision() {
   const [activeTab, setActiveTab] = useState<'ventilation' | 'lobby' | 'rooftop' | 'structure'>('ventilation');
+  const { t, language } = useLanguage();
 
   const visionTabs = [
     {
       id: 'ventilation',
-      title: 'Daylight & Ventilation',
-      subtitle: 'Dual ventilation corridors',
+      title: language === 'bn' ? 'আলো এবং বাতাস' : 'Daylight & Ventilation',
+      subtitle: language === 'bn' ? 'ডুয়াল উইন্ডো করিডোর' : 'Dual ventilation corridors',
       icon: Wind,
       image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1000&q=80',
-      description:
-        'With exactly four flats per floor, every home takes a corner slot. This ingenious design secures 3-side exposure, bathing rooms in morning daylight while generating persistent high-velocity cross-wind drafts across all bedrooms.',
+      description: language === 'bn'
+        ? 'প্রতি ফ্লোরে মাত্র ৪টি ফ্ল্যাট থাকার মাধ্যমে প্রতিটি ঘরই কর্নার ইউনিটের সুবিধা পায়। এর ফলে ৩টি পাশ উন্মুক্ত বাতাস ও আলো প্রবেশ করতে দেয় এবং শোবার ঘরে চমৎকার ভেন্টিলেশন পাওয়া যায়।'
+        : 'With exactly four flats per floor, every home takes a corner slot. This ingenious design secures 3-side exposure, bathing rooms in morning daylight while generating persistent high-velocity cross-wind drafts across all bedrooms.',
       stats: [
-        { label: 'Exposed Corners', value: '4 per flat' },
-        { label: 'Daylight Coverage', value: '100% Rooms' },
+        { label: language === 'bn' ? 'খোলা জানালা' : 'Exposed Corners', value: language === 'bn' ? 'প্রতি ফ্ল্যাটে ৪টি' : '4 per flat' },
+        { label: language === 'bn' ? 'আলোর ব্যবস্থা' : 'Daylight Coverage', value: language === 'bn' ? '১০০% সকল রুম' : '100% Rooms' },
       ],
-      bullets: [
+      bullets: language === 'bn' ? [
+        'দ্বিমুখী আলোযুক্ত চমৎকার মাস্টার বারান্দা।',
+        'উষ্ণ বায়ু নিষ্কাশনের জন্য চমৎকার বাতাস প্রবাহ ও ড্যাম্প সুরক্ষাকার চ্যানেল।',
+        'উন্নত মানের ডাবল ক্রোম-গ্লেজড স্লাইডিং গ্লাস উইন্ডো।'
+      ] : [
         'Naturally lit dual-exposure master verandas.',
         'Prevents hot-spots through persistent convective air currents.',
         'High-performance glazed sliding windows for optimal seals.',
@@ -31,17 +38,22 @@ export default function Vision() {
     },
     {
       id: 'lobby',
-      title: 'Grand Central Lobby',
-      subtitle: 'Refined transitional space',
+      title: language === 'bn' ? 'গ্র্যান্ড সেন্ট্রাল লবি' : 'Grand Central Lobby',
+      subtitle: language === 'bn' ? 'সুসজ্জিত অভ্যর্থনা স্পেস' : 'Refined transitional space',
       icon: Sparkles,
       image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=80',
-      description:
-        'A towering main reception desk finished in deep charcoal granite and brushed gold panels sets a powerful, dignified welcoming tone for both residents and distinguished corporate and personal visitors.',
+      description: language === 'bn'
+        ? 'গভীর চারকোল গ্রানাইট এবং ব্রাশড গোল্ড প্যানেল দিয়ে সুসজ্জিত একটি সেন্ট্রাল অভ্যর্থনা ডেস্ক যা আপনার আগমনকারী বিশিষ্ট অতিথি এবং বাসিন্দাদের স্বাগত জানাবে রাজকীয় আভিজাত্যে।'
+        : 'A towering main reception desk finished in deep charcoal granite and brushed gold panels sets a powerful, dignified welcoming tone for both residents and distinguished corporate and personal visitors.',
       stats: [
-        { label: 'Ceiling Height', value: 'Double Volume' },
-        { label: 'Security Cover', value: '24/7 Gate Guard' },
+        { label: language === 'bn' ? 'সিলিং হাইট' : 'Ceiling Height', value: language === 'bn' ? 'ডবল ভলিউম' : 'Double Volume' },
+        { label: language === 'bn' ? 'নিরাপত্তা কভার' : 'Security Cover', value: language === 'bn' ? '২৪/৭ গার্ড অ্যাক্সেস' : '24/7 Gate Guard' },
       ],
-      bullets: [
+      bullets: language === 'bn' ? [
+        'ইতালিয়ান মার্বেল পাথর দিয়ে নির্মিত দৃষ্টিনন্দন ফ্লোরিং।',
+        'মহামান্য দর্শক ও নিরাপত্তা কর্মীদের জন্য আরামদায়ক বিলাসবহুল ব্যাকরেস্ট লাউঞ্জ।',
+        'বাসিন্দাদের সুরক্ষায় ডিজিটাল বায়োমেট্রিক গেট প্রবেশদ্বার।'
+      ] : [
         'Italian stone tiles with subtle gold-accented grouts.',
         'Luxurious seating lounge for visitors and security staff.',
         'Secured biometric passage access points for residents.',
@@ -49,17 +61,22 @@ export default function Vision() {
     },
     {
       id: 'rooftop',
-      title: 'Rooftop Community Haven',
-      subtitle: 'Landscaped leisure deck',
+      title: language === 'bn' ? 'ছাদ বাগান ও সামাজিক ছাদ' : 'Rooftop Community Haven',
+      subtitle: language === 'bn' ? 'পরিকল্পিত অবসর ডেক' : 'Landscaped leisure deck',
       icon: TreePine,
       image: 'https://images.unsplash.com/photo-1531971589569-0d93700db184?auto=format&fit=crop&w=1000&q=80',
-      description:
-        'Escape above standard metropolitan noise to our beautifully curated penthouse-level community zone. Enjoy landscaped stone flower beds, soft accent solar lights, and panoramic vistas of Dhaka.',
+      description: language === 'bn'
+        ? 'ব্যস্ত নগর জীবনের কোলাহল থেকে মুক্ত আমাদের সুন্দর রুফটপ জোন। যেখানে রয়েছে সবুজ ল্যান্ডস্কেপ করা পাথরের বেড, মনোরম আলো এবং ঢাকার প্যানোরামিক বিউ।'
+        : 'Escape above standard metropolitan noise to our beautifully curated penthouse-level community zone. Enjoy landscaped stone flower beds, soft accent solar lights, and panoramic vistas of Dhaka.',
       stats: [
-        { label: 'Amenity Area', value: '2,500 sq ft' },
-        { label: 'Lush Gardens', value: 'Rooftop Periphery' },
+        { label: language === 'bn' ? 'সুযোগ সুবিধা এলাকা' : 'Amenity Area', value: language === 'bn' ? '২,৫০০ বর্গফুট' : '2,500 sq ft' },
+        { label: language === 'bn' ? 'লশ গার্ডেন' : 'Lush Gardens', value: language === 'bn' ? 'ছাদের চারপাশে' : 'Rooftop Periphery' },
       ],
-      bullets: [
+      bullets: language === 'bn' ? [
+        'পারিবারিক আচার অনুষ্ঠান ও গেট-টুগেদার করার জন্য আদর্শ ও সুরক্ষিত স্পেস।',
+        'উচ্চ মানের গ্লাস সিকিউরিটি বেরিয়ার সহ নিরাপদ আবহাওয়া-প্রতিরোধী মেকআপ।',
+        'ল্যান্ডস্কেপ স্থপতিদের দ্বারা পরিকল্পিত বিরল প্রজাতির বাহারি বৃক্ষ রোপন ব্যবস্থা।'
+      ] : [
         'Dedicated secure space for familial community events.',
         'Weather-proof design with safe glass safety barriers.',
         'Lush endemic flora designed by landscape architects.',
@@ -67,17 +84,22 @@ export default function Vision() {
     },
     {
       id: 'structure',
-      title: 'Structural Sophistication',
-      subtitle: 'Engineered safety standards',
+      title: language === 'bn' ? 'কাঠামোগত আধুনিকতা' : 'Structural Sophistication',
+      subtitle: language === 'bn' ? 'সর্বোচ্চ বুনিয়াদ মানদণ্ড' : 'Engineered safety standards',
       icon: Building2,
       image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80',
-      description:
-        'Engineered to meet rigorous RAJUK National Building Code standards. The tower is anchored by a Reinforced Concrete Raft over deep Cast-in-Situ piles, utilizing multi-layer elastomeric polymer waterproofing membranes.',
+      description: language === 'bn'
+        ? 'অতি কঠোর রাজুক (RAJUK) বিল্ডিং কোড মেনে নির্মিত। বহুতল ভবনটির স্থায়ী সুরক্ষায় গভীর কাস্ট-ইন-সিটু পাইলিং ও ভূমিকম্প প্রতিরোধী ডিজাইনের নিখুঁত রূপায়ন করা হয়েছে।'
+        : 'Engineered to meet rigorous RAJUK National Building Code standards. The tower is anchored by a Reinforced Concrete Raft over deep Cast-in-Situ piles, utilizing multi-layer elastomeric polymer waterproofing membranes.',
       stats: [
-        { label: 'Concrete Strength f\'c', value: '4,000 PSI Cast' },
-        { label: 'Steel Reinforcement', value: 'Grade 60/72 High-Yield' },
+        { label: language === 'bn' ? 'কংক্রিট শক্তি (ফ\'সি)' : 'Concrete Strength f\'c', value: language === 'bn' ? '৪,০০০ পিএসআই কাস্ট' : '4,000 PSI Cast' },
+        { label: language === 'bn' ? 'স্টিল রিইনফোর্সমেন্ট' : 'Steel Reinforcement', value: language === 'bn' ? 'বিএসআরএম ৭২.৫ প্রিমিয়াম গ্রেড' : 'Grade 60/72 High-Yield' },
       ],
-      bullets: [
+      bullets: language === 'bn' ? [
+        'বিশাল আকারের কংক্রিট বেস কলাম নেটওয়ার্ক (১৬" x ২৪") যা সর্বোচ্চ নিরাপত্তা ধরে রাখে।',
+        'ভূমিকম্পর সহনশীলতা বাড়াতে ভারী ডিফর্মড রিবার স্টিল জাল সংযোগ।',
+        'ড্যাম্প প্রতিরোধের জন্য মাল্টি-লেয়ার ওয়াটারপ্রুফিং মেমব্রেন পদ্ধতি।'
+      ] : [
         'Massive base columns (16" x 24") tapering in stages down to 12" x 16" on upper residential floors.',
         'High-performance deformed rebar networks for maximal seismic dissipation.',
         'Sought-after waterproofing system protecting the subterranean levels and service shafts.',
@@ -98,14 +120,14 @@ export default function Vision() {
         {/* Section Heading */}
         <div className="text-center max-w-3xl mx-auto mb-20">
           <span className="font-mono text-xs text-gold-600 tracking-[0.3em] uppercase block mb-3">
-            THE PROJECT PHILOSOPHY
+            {t('vision.badge')}
           </span>
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal text-neutral-900 tracking-tight leading-none mb-6">
-            Modern Luxury Meets Thoughtful Design
+            {t('vision.title')}
           </h2>
           <div className="w-12 h-[1px] bg-gold-400 mx-auto mb-6" />
           <p className="font-sans text-neutral-500 font-light text-base md:text-lg leading-relaxed">
-            Abrar Tower-2 completely reinterprets urban housing in Uttara, Dhaka. Combining exclusive structural privacy with a luxurious transition from public lounge areas to private verandas.
+            {t('vision.subtitle')}
           </p>
         </div>
 
@@ -115,7 +137,7 @@ export default function Vision() {
           {/* Left: Tab Selectors (Compact desktop-first listing) */}
           <div className="lg:col-span-4 flex flex-col gap-3">
             <span className="font-mono text-[10px] tracking-widest text-[#999] uppercase pr-2 pl-1 mb-2">
-              Explore Architectural Facets
+              {language === 'bn' ? 'স্থাপত্যের বিভিন্ন দিকগুলি দেখুন' : 'Explore Architectural Facets'}
             </span>
             {visionTabs.map((tab) => {
               const isSelected = activeTab === tab.id;
@@ -234,14 +256,14 @@ export default function Vision() {
           <div className="flex flex-col md:flex-row items-baseline justify-between gap-4 mb-10">
             <div>
               <span className="font-mono text-[10px] text-gold-600 tracking-[0.2em] uppercase block mb-2">
-                CIVIL SURVEY & REGULATORY METRICS
+                {language === 'bn' ? 'সিভিল জরিপ এবং নিয়ন্ত্রণ পরিমাপ' : 'CIVIL SURVEY & REGULATORY METRICS'}
               </span>
               <h3 className="font-serif text-2xl md:text-3xl font-normal text-[#111] tracking-tight">
-                RAJUK Building Code Sheet
+                {language === 'bn' ? 'রাজুক বিল্ডিং কোড শিট' : 'RAJUK Building Code Sheet'}
               </h3>
             </div>
             <span className="text-2xs font-mono bg-neutral-100 text-neutral-600 px-3 py-1.5 rounded border border-neutral-200 uppercase tracking-widest">
-              Verified Executive Plan • East Faydabad G+9
+              {language === 'bn' ? 'যাচাইকৃত নকশা • পূর্ব ফায়দাবাদ জি+৯' : 'Verified Executive Plan • East Faydabad G+9'}
             </span>
           </div>
 
@@ -250,73 +272,87 @@ export default function Vision() {
             {/* Box 1: Site Geometry */}
             <div className="bg-neutral-50 p-6 rounded-lg border border-neutral-150 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-wider block mb-3">01 // PLOT LAND GEOMETRY</span>
-                <span className="font-serif text-2xl font-normal text-neutral-900 block leading-none mb-1">10.0 Katha</span>
+                <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-wider block mb-3">
+                  {language === 'bn' ? '০১ // জমির পরিমাণ ও আকার' : '01 // PLOT LAND GEOMETRY'}
+                </span>
+                <span className="font-serif text-2xl font-normal text-neutral-900 block leading-none mb-1">
+                  {language === 'bn' ? '১০.০ কাঠা' : '10.0 Katha'}
+                </span>
                 <span className="text-xs text-neutral-500 font-sans">
-                  Total area: 7,200 sq ft (668.9 m²)
+                  {language === 'bn' ? 'মোট আয়তন: ৭,২০০ বর্গফুট (৬৬৮.৯ মি²)' : 'Total area: 7,200 sq ft (668.9 m²)'}
                 </span>
               </div>
               <div className="border-t border-neutral-200/60 mt-4 pt-3 text-[10px] font-mono text-neutral-500 flex justify-between">
-                <span>FRONTAGE ACCESS:</span>
-                <span className="text-neutral-800 font-bold">60.0 FT ROAD</span>
+                <span>{language === 'bn' ? 'সামনের রাস্তা:' : 'FRONTAGE ACCESS:'}</span>
+                <span className="text-neutral-800 font-bold">{language === 'bn' ? '৬০.০ ফুট চওড়া' : '60.0 FT ROAD'}</span>
               </div>
             </div>
 
             {/* Box 2: Footprint Coverage */}
             <div className="bg-neutral-50 p-6 rounded-lg border border-neutral-150 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-wider block mb-3">02 // FOOTPRINT COVERAGE</span>
-                <span className="font-serif text-2xl font-normal text-neutral-900 block leading-none mb-1">60.0% MGC</span>
+                <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-wider block mb-3">
+                  {language === 'bn' ? '০২ // গ্রাউন্ড কভারেজ' : '02 // FOOTPRINT COVERAGE'}
+                </span>
+                <span className="font-serif text-2xl font-normal text-neutral-900 block leading-none mb-1">
+                  {language === 'bn' ? '৬০.০% এমজিসি' : '60.0% MGC'}
+                </span>
                 <span className="text-xs text-neutral-500 font-sans">
-                  Max Ground Coverage compliant
+                  {language === 'bn' ? 'সর্বোচ্চ গ্রাউন্ড কভারেজ কোড সম্মত' : 'Max Ground Coverage compliant'}
                 </span>
               </div>
               <div className="border-t border-neutral-200/60 mt-4 pt-3 text-[10px] font-mono text-neutral-500 flex justify-between">
-                <span>ALLOWABLE CORE:</span>
-                <span className="text-neutral-800 font-bold">4,320 SQ FT</span>
+                <span>{language === 'bn' ? 'অনুমোদিত কোর তলা:' : 'ALLOWABLE CORE:'}</span>
+                <span className="text-neutral-800 font-bold">{language === 'bn' ? '৪,৩২০ বর্গফুট' : '4,320 SQ FT'}</span>
               </div>
             </div>
 
             {/* Box 3: Regulated Setbacks */}
             <div className="bg-neutral-50 p-6 rounded-lg border border-neutral-150 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-wider block mb-3">03 // CLEAR BOUNDARY SETBACKS</span>
+                <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-wider block mb-3">
+                  {language === 'bn' ? '০৩ // বাউন্ডারি চারপাশ ক্লিয়ারেন্স' : '03 // CLEAR BOUNDARY SETBACKS'}
+                </span>
                 <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-1 font-mono text-xs">
                   <div className="flex justify-between border-b border-neutral-200/50 pb-0.5">
-                    <span className="text-neutral-400 text-2xs">FRONT (S)</span>
-                    <span className="text-neutral-800 font-semibold">5'-0"</span>
+                    <span className="text-neutral-400 text-2xs">{language === 'bn' ? 'সামনে (দক্ষিণ)' : 'FRONT (S)'}</span>
+                    <span className="text-neutral-800 font-semibold">৫'-০"</span>
                   </div>
                   <div className="flex justify-between border-b border-neutral-200/50 pb-0.5">
-                    <span className="text-neutral-400 text-2xs">REAR (N)</span>
-                    <span className="text-neutral-800 font-semibold">10'-0"</span>
+                    <span className="text-neutral-400 text-2xs">{language === 'bn' ? 'পেছনে (উত্তর)' : 'REAR (N)'}</span>
+                    <span className="text-neutral-800 font-semibold">১০'-০"</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-neutral-400 text-2xs">EAST</span>
-                    <span className="text-neutral-800 font-semibold">4'-0"</span>
+                    <span className="text-neutral-400 text-2xs">{language === 'bn' ? 'পূর্ব' : 'EAST'}</span>
+                    <span className="text-neutral-800 font-semibold">৪'-০"</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-neutral-400 text-2xs">WEST</span>
-                    <span className="text-neutral-800 font-semibold">4'-0"</span>
+                    <span className="text-neutral-400 text-2xs">{language === 'bn' ? 'পশ্চিম' : 'WEST'}</span>
+                    <span className="text-neutral-800 font-semibold">৪'-০"</span>
                   </div>
                 </div>
               </div>
               <p className="text-[9px] text-neutral-400 font-sans mt-3">
-                Full setbacks compliance keeps ambient airflow corridor free.
+                {language === 'bn' ? 'কোড মেনে বাউন্ডারি ছাড়ার ফলে মনোরম বাতাস স্বাভাবিক উপায়ে প্রবাহিত হবে।' : 'Full setbacks compliance keeps ambient airflow corridor free.'}
               </p>
             </div>
 
             {/* Box 4: Vertical Circulation Core */}
             <div className="bg-neutral-50 p-6 rounded-lg border border-neutral-150 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-wider block mb-3">04 // CIRCULATION CORE</span>
-                <span className="font-serif text-2xl font-normal text-neutral-900 block leading-none mb-1">Double Core</span>
+                <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-wider block mb-3">
+                  {language === 'bn' ? '০৪ // যাতায়াত কোর নেটওয়ার্ক' : '04 // CIRCULATION CORE'}
+                </span>
+                <span className="font-serif text-2xl font-normal text-neutral-900 block leading-none mb-1">
+                  {language === 'bn' ? 'ডবল কোর লিফ্ট' : 'Double Core'}
+                </span>
                 <span className="text-xs text-neutral-500 font-sans">
-                  2 high-speed lifts, 2 stairwells
+                  {language === 'bn' ? '২টি হাই স্পিড লিফট, ২জোড়া সিঁড়ি' : '2 high-speed lifts, 2 stairwells'}
                 </span>
               </div>
               <div className="border-t border-neutral-200/60 mt-4 pt-3 text-[10px] font-mono text-neutral-500 flex justify-between">
-                <span>MEP SHAFT SYSTEM:</span>
-                <span className="text-neutral-800 font-bold">2 DEDICATED</span>
+                <span>{language === 'bn' ? 'এমইপি শ্যাফ্ট সিস্টেম:' : 'MEP SHAFT SYSTEM:'}</span>
+                <span className="text-neutral-800 font-bold">{language === 'bn' ? '২টি ডেডিকেটেড' : '2 DEDICATED'}</span>
               </div>
             </div>
 

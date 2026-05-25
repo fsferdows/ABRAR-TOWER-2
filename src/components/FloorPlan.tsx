@@ -321,6 +321,54 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
       50% { transform: scale(1.3); opacity: 1; }
       100% { transform: scale(0.9); opacity: 0.5; }
     }
+
+    @media (max-width: 640px) {
+      #ui-overlay {
+        top: auto !important;
+        bottom: 12px !important;
+        left: 12px !important;
+        right: 12px !important;
+        width: auto !important;
+        max-width: calc(100% - 24px) !important;
+        max-height: 38vh !important;
+        overflow-y: auto !important;
+        padding: 10px 12px !important;
+        font-size: 8px !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.95) !important;
+      }
+      h1 {
+        font-size: 11px !important;
+        margin-bottom: 2px !important;
+      }
+      .subtitle {
+        font-size: 7px !important;
+        margin-bottom: 8px !important;
+        padding-bottom: 4px !important;
+      }
+      .step-btn {
+        padding: 4px 6px !important;
+        font-size: 8px !important;
+        margin-bottom: 4px !important;
+      }
+      #measure-hud {
+        top: 10px !important;
+        width: 85% !important;
+        padding: 6px 10px !important;
+        font-size: 8px !important;
+      }
+      .luxury-select {
+        font-size: 8px !important;
+        padding: 4px 6px !important;
+      }
+      .grid-btn, .measure-btn {
+        padding: 4px !important;
+        font-size: 7px !important;
+      }
+      .overlay-sect {
+        margin-top: 8px !important;
+        padding-top: 6px !important;
+      }
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -370,13 +418,51 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
       </select>
     </div>
 
+    <!-- ARCHITECTURAL PROJECTIONS -->
+    <div class="overlay-sect">
+      <span class="sect-title">Standard Elevations</span>
+      <div class="grid-2col" style="grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+        <button class="grid-btn" style="font-size: 7.5px;" onclick="setElevationView('north')">North Elev</button>
+        <button class="grid-btn" style="font-size: 7.5px;" onclick="setElevationView('south')">South Iso</button>
+        <button class="grid-btn" style="font-size: 7.5px;" onclick="setElevationView('top')">Rooftop Top</button>
+      </div>
+    </div>
+
+    <!-- ORBIT SENSITIVITY CONTROLS -->
+    <div class="overlay-sect">
+      <span class="sect-title">Orbit Dynamics</span>
+      <div style="margin-bottom: 5px;">
+        <div style="display: flex; justify-content: space-between; font-family: monospace; font-size: 7.5px; color: #94a3b8; margin-bottom: 2px;">
+          <span>ZOOM SPEED</span>
+          <span id="zoom-lbl">1.0X</span>
+        </div>
+        <input type="range" id="zoom-speed-slider" min="0.2" max="3.0" step="0.1" value="1.0" style="width: 100%; accent-color: #d4af37;" oninput="updateOrbitSensitivity('zoom', this.value)">
+      </div>
+      <div>
+        <div style="display: flex; justify-content: space-between; font-family: monospace; font-size: 7.5px; color: #94a3b8; margin-bottom: 2px;">
+          <span>PAN DYNAMICS</span>
+          <span id="pan-lbl">1.0X</span>
+        </div>
+        <input type="range" id="pan-speed-slider" min="0.2" max="3.0" step="0.1" value="1.0" style="width: 100%; accent-color: #d4af37;" oninput="updateOrbitSensitivity('pan', this.value)">
+      </div>
+    </div>
+
+    <!-- VISUAL MODEL TOGGLE (TROGGLE MODE) -->
+    <div class="overlay-sect">
+      <span class="sect-title">Render Toggle Mode</span>
+      <div class="grid-2col">
+        <button id="render-realistic" class="grid-btn active" onclick="setRenderMode('realistic')">Layered Solid</button>
+        <button id="render-blueprints" class="grid-btn" onclick="setRenderMode('blueprints')">Blueprint Glass</button>
+      </div>
+    </div>
+
     <!-- LIGHTING ENVIRONMENT SIMULATION -->
     <div class="overlay-sect">
       <span class="sect-title">Lighting & Solar Simulation</span>
       <div class="grid-2col">
         <button id="light-noon" class="grid-btn active" onclick="simulateLighting('noon')">Noon Sun</button>
         <button id="light-morning" class="grid-btn" onclick="simulateLighting('morning')">Morning Sun</button>
-        <button id="light-dusk" class="grid-btn" onclick="simulateLighting('dusk')">Dusk Light</button>
+        <button id="light-dusk" class="grid-btn" onclick="simulateLighting('dusk')">Dusk Ambient</button>
         <button id="light-midnight" class="grid-btn" onclick="simulateLighting('midnight')">Midnight Glow</button>
       </div>
     </div>
@@ -387,21 +473,105 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
       <button id="btn-measure" class="measure-btn" onclick="toggleMeasurementMode()">Measure Distance</button>
       <button id="btn-measure-clear" class="measure-clear" onclick="clearMeasurements()">Clear Points</button>
     </div>
+
+    <!-- STEREO WALKTHROUGH MODE -->
+    <div class="overlay-sect">
+      <span class="sect-title">Digital Twin Walkthrough</span>
+      <button id="btn-vr" class="grid-btn" style="width: 100%; border-color: rgba(212, 175, 55, 0.2);" onclick="toggleVRMode()">
+        👓 Toggle VR Stereo View
+      </button>
+    </div>
+
+    <!-- FIELD SITE INSPECTION SNAPSHOT -->
+    <div class="overlay-sect">
+      <span class="sect-title">Verification Logs</span>
+      <button id="btn-capture" class="grid-btn" style="width: 100%; background: rgba(212, 175, 55, 0.1); border-color: #d4af37; color: #d4af37; font-weight: 500;" onclick="triggerInspectionSnapshot()">
+        📸 Capture Site Inspection
+      </button>
+    </div>
+  </div>
+
+  <!-- Snapshot View Camera Modal Viewfinder HUD -->
+  <div id="snapshot-modal" style="position: absolute; inset: 0; background: rgba(5,7,15,0.96); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; font-family: monospace; color: white; padding: 20px;">
+    <div style="background: #080b16; border: 1px solid #d4af37; border-radius: 8px; width: 95%; max-width: 500px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.95);">
+      <div style="padding: 12px 16px; border-bottom: 1px solid rgba(212,175,55,0.25); display: flex; justify-content: space-between; align-items: center; background: rgba(212,175,55,0.06);">
+        <span style="color: #d4af37; font-size: 10px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">Abrar-2 Field Inspection Camera</span>
+        <button onclick="closeSnapshotModal()" style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 18px; line-height: 1;">&times;</button>
+      </div>
+      
+      <div style="position: relative; aspect-ratio: 4/3; margin: 16px; background: #000; border: 1px solid rgba(212,175,55,0.15); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+        <video id="webcam-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none;"></video>
+        <canvas id="fallback-canvas" style="display: none; width: 100%; height: 100%; object-fit: contain;"></canvas>
+        <div id="loader-camera" style="color: #64748b; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; text-align: center;">Initializing live optical device...</div>
+        
+        <!-- Camera viewfinder UI markings -->
+        <div style="position: absolute; inset: 24px; border: 1px dashed rgba(212,175,55,0.2); pointer-events: none;">
+          <div style="position: absolute; top: -1px; left: -1px; width: 8px; height: 8px; border-top: 1.5px solid #d4af37; border-left: 1.5px solid #d4af37;"></div>
+          <div style="position: absolute; top: -1px; right: -1px; width: 8px; height: 8px; border-top: 1.5px solid #d4af37; border-right: 1.5px solid #d4af37;"></div>
+          <div style="position: absolute; bottom: -1px; left: -1px; width: 8px; height: 8px; border-bottom: 1.5px solid #d4af37; border-left: 1.5px solid #d4af37;"></div>
+          <div style="position: absolute; bottom: -1px; right: -1px; width: 8px; height: 8px; border-bottom: 1.5px solid #d4af37; border-right: 1.5px solid #d4af37;"></div>
+          
+          <div style="position: absolute; top: 50%; left: 50%; width: 12px; height: 1.5px; background: rgba(212,175,55,0.45); transform: translate(-50%, -50%);"></div>
+          <div style="position: absolute; top: 50%; left: 50%; width: 1.5px; height: 12px; background: rgba(212,175,55,0.45); transform: translate(-50%, -50%);"></div>
+        </div>
+      </div>
+
+      <div style="padding: 0 16px 16px 16px; display: flex; flex-direction: column; gap: 8px;">
+        <button id="btn-shutter" onclick="captureShutterFrame()" style="width: 100%; background: #d4af37; border: none; border-radius: 4px; color: #05070f; font-family: monospace; font-size: 11px; font-weight: bold; padding: 10px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s;">
+          📷 Trigger Capture Frame
+        </button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <button id="btn-toggle-source" onclick="toggleSnapshotSource()" style="background: rgba(30,41,59,0.5); border: 1px solid rgba(212,175,55,0.2); color: #cbd5e1; border-radius: 4px; font-family: monospace; font-size: 8.5px; padding: 6px; cursor: pointer;">
+            Toggle Source (Webcam/3D)
+          </button>
+          <button onclick="closeSnapshotModal()" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fc8181; border-radius: 4px; font-family: monospace; font-size: 8.5px; padding: 6px; cursor: pointer;">
+            Cancel Audit
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Snapshot View Save & Saved Document Sheet -->
+  <div id="capture-saved-modal" style="position: absolute; inset: 0; background: rgba(5,7,15,0.98); z-index: 10001; display: none; flex-direction: column; align-items: center; justify-content: center; font-family: monospace; color: white; padding: 20px;">
+    <div style="background: #080b16; border: 1px solid #d4af37; border-radius: 8px; width: 95%; max-width: 500px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.95);">
+      <div style="padding: 12px 16px; border-bottom: 1px solid rgba(212,175,55,0.25); display: flex; justify-content: space-between; align-items: center; background: rgba(212,175,55,0.06);">
+        <span style="color: #d4af37; font-size: 10px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase;">Inspection Frame Compiled</span>
+        <button onclick="closeSavedModal()" style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 18px; line-height: 1;">&times;</button>
+      </div>
+      
+      <div style="padding: 16px; text-align: center;">
+        <div style="border: 4px solid #ffffff; background: #ffffff; box-shadow: 0 10px 30px rgba(0,0,0,0.6); overflow: hidden; margin-bottom: 16px;">
+          <img id="saved-snapshot-img" style="width: 100%; display: block; filter: contrast(1.02) brightness(0.99);" />
+        </div>
+        <span style="color: #10b981; font-size: 9.5px; font-weight: bold; display: block; margin-bottom: 12px; tracking-wider: 1px;">✓ TECHNICAL RECORD SECURED WITH RAJUK METADATA HEADER</span>
+        
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-download-image" onclick="downloadCompiledLog()" style="flex: 1; background: #10b981; border: none; border-radius: 4px; color: #05070f; font-family: monospace; font-size: 11px; font-weight: bold; padding: 10px; cursor: pointer; text-transform: uppercase;">
+            💾 Save Inspection JPEG
+          </button>
+          <button onclick="closeSavedModal()" style="background: rgba(30,41,59,0.5); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 4px; font-family: monospace; font-size: 11px; padding: 10px; cursor: pointer;">
+            Close Sheet
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
     const container = document.getElementById('viewport-container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x05070f);
-    scene.fog = new THREE.Fog(0x05070f, 150, 480);
+    // Disable fog entirely to maintain beautiful, accurate, and pin-sharp graphics even at extreme zoom ranges
+    scene.fog = null; 
 
     const initialWidth = container ? (container.clientWidth || window.innerWidth || 800) : 800;
     const initialHeight = container ? (container.clientHeight || window.innerHeight || 600) : 600;
-    const camera = new THREE.PerspectiveCamera(45, initialWidth / initialHeight, 1, 1000);
+    const camera = new THREE.PerspectiveCamera(45, initialWidth / initialHeight, 1, 1500);
     camera.position.set(55, 50, 75);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance", preserveDrawingBuffer: true });
+    renderer.setPixelRatio(window.devicePixelRatio || 1); 
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     
@@ -414,6 +584,9 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.maxPolarAngle = Math.PI / 2 - 0.01; 
+    controls.minDistance = 12;
+    // Set reasonable max distance corresponding to the site limits to avoid tiny-scale pixel interpolation
+    controls.maxDistance = 260; 
     controls.target.set(0, 16, 0);
     controls.update();
 
@@ -569,6 +742,35 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
     const spriteSetbacks = createTextSprite("RAJUK COMPLIANCE: 20% SETBACKS (MGC 60%)", "#ef4444");
     spriteSetbacks.position.set(0, 5, 0);
     structuralBaseGroup.add(spriteSetbacks);
+
+    // Deep Subterranean Bored Cast-in-situ Piles (Civil Engineering Foundation)
+    const pileMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.9, transparent: true, opacity: 0.65 });
+    const colsListGrid = [
+      [-12, -14], [-4, -14], [4, -14], [12, -14],
+      [-12, 0],   [-4, 0],   [4, 0],   [12, 0],
+      [-12, 14],  [-4, 14],  [4, 14],  [12, 14]
+    ];
+    colsListGrid.forEach((coord) => {
+      // Create a long cast pile going from y = -25 to y = 0 (110ft deep equivalent)
+      const pileGeo = new THREE.CylinderGeometry(0.5, 0.5, 25, 8);
+      const pileMesh = new THREE.Mesh(pileGeo, pileMat);
+      pileMesh.position.set(coord[0], -12.5, coord[1]);
+      pileMesh.castShadow = true;
+      pileMesh.receiveShadow = true;
+      structuralBaseGroup.add(pileMesh);
+      
+      // Concrete Pile cap block
+      const capGeo = new THREE.BoxGeometry(1.6, 1.0, 1.6);
+      const capMesh = new THREE.Mesh(capGeo, pileMat);
+      capMesh.position.set(coord[0], -0.5, coord[1]);
+      structuralBaseGroup.add(capMesh);
+    });
+    
+    // Label for subterranean piling
+    const pileLabelSprite = createTextSprite("110-FT DEEP BORED CAST-IN-SITU PILES FOUNDATION", "#38bdf8", "rgba(13, 17, 30, 0.95)");
+    pileLabelSprite.position.set(0, -6, 20);
+    pileLabelSprite.scale.set(13, 3.0, 1);
+    structuralBaseGroup.add(pileLabelSprite);
 
 
     // 2. Pillars Grid
@@ -737,6 +939,53 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
     parkingBaseGroup.userData = { floorIndex: 0 };
     columnsGroup.add(parkingBaseGroup);
 
+    // High fidelity 3D Low-Poly Luxury Car Custom Mesh Generator
+    function createCarMesh(colorHex) {
+      const carGroup = new THREE.Group();
+      
+      // Chassis
+      const chassisMat = new THREE.MeshStandardMaterial({ 
+        color: colorHex, 
+        roughness: 0.25, 
+        metalness: 0.8 
+      });
+      const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.45, 2.7), chassisMat);
+      chassis.position.y = 0.35;
+      chassis.castShadow = true;
+      chassis.receiveShadow = true;
+      carGroup.add(chassis);
+      
+      // Glass Cabin
+      const cabMat = new THREE.MeshStandardMaterial({ 
+        color: 0x090d16, 
+        roughness: 0.1, 
+        metalness: 0.9, 
+        transparent: true, 
+        opacity: 0.8 
+      });
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.4, 1.55), cabMat);
+      cabin.position.set(0, 0.65, -0.15);
+      cabin.castShadow = true;
+      carGroup.add(cabin);
+      
+      // Dark Wheels
+      const tireMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.95 });
+      const wheelGeo = new THREE.BoxGeometry(0.3, 0.45, 0.45);
+      [
+        [-0.72, 0.22, 0.75],  // FL
+        [0.72, 0.22, 0.75],   // FR
+        [-0.72, 0.22, -0.75], // RL
+        [0.72, 0.22, -0.75]   // RR
+      ].forEach(pos => {
+        const wheel = new THREE.Mesh(wheelGeo, tireMat);
+        wheel.position.set(pos[0], pos[1], pos[2]);
+        wheel.castShadow = true;
+        carGroup.add(wheel);
+      });
+      
+      return carGroup;
+    }
+
     // Creating 10 distinct parking bays drawn onto the ground
     const bayMat = new THREE.LineBasicMaterial({ color: 0xd4af37, linewidth: 2 });
     for (let p = 0; p < 10; p++) {
@@ -752,6 +1001,15 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
       const bayLine = new THREE.Line(bayGeo, bayMat);
       bayLine.userData = { floorIndex: 0 };
       parkingBaseGroup.add(bayLine);
+
+      // Park realistic miniature luxury cars in certain bays (lived-in community feel)
+      if (p === 1 || p === 3 || p === 6 || p === 8) {
+        const carPalette = [0xd4af37, 0x1e293b, 0x475569, 0xb91c1c]; // Luxury Gold, Navy Blue, Silver Gray, Cherry Red
+        const car = createCarMesh(carPalette[(p - 1) % 4]);
+        car.position.set(posX + 1.25, 0.05, -5.5);
+        car.userData = { floorIndex: 0 };
+        parkingBaseGroup.add(car);
+      }
 
       // Small numbering sprite
       const bayIdxSprite = createTextSprite("P" + (p + 1), "#ffffff", "rgba(5, 5, 5, 0.9)");
@@ -775,6 +1033,34 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
     oasisTurf.position.set(0, roofLevelY + 0.05, 0);
     oasisTurf.userData = { floorIndex: 10 };
     roofGroup.add(oasisTurf);
+
+    // Shimmering Rooftop Infinity Splash Pool
+    const poolWaterGeo = new THREE.BoxGeometry(10, 0.1, 7.5);
+    const poolWaterMat = new THREE.MeshStandardMaterial({ 
+      color: 0x0ea5e9, 
+      roughness: 0.05, 
+      metalness: 0.85, 
+      emissive: 0x0ea5e9, 
+      emissiveIntensity: 0.3 
+    });
+    const poolWater = new THREE.Mesh(poolWaterGeo, poolWaterMat);
+    poolWater.position.set(-9.5, roofLevelY + 0.12, 5.5);
+    poolWater.userData = { floorIndex: 10 };
+    roofGroup.add(poolWater);
+    
+    // Pool stone border
+    const poolBorderGeo = new THREE.BoxGeometry(10.8, 0.18, 8.3);
+    const poolBorderMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.85 });
+    const poolBorder = new THREE.Mesh(poolBorderGeo, poolBorderMat);
+    poolBorder.position.set(-9.5, roofLevelY + 0.09, 5.5);
+    poolBorder.userData = { floorIndex: 10 };
+    roofGroup.add(poolBorder);
+    
+    const poolLabel = createTextSprite("ROOFTOP POOL & INFINITY DECK", "#38bdf8", "rgba(8, 11, 22, 0.9)");
+    poolLabel.position.set(-9.5, roofLevelY + 2.0, 5.5);
+    poolLabel.scale.set(6, 1.4, 1);
+    poolLabel.userData = { floorIndex: 10 };
+    roofGroup.add(poolLabel);
 
     // Beautiful pergola structure with beams
     const pergolaStructuralGeo = new THREE.BoxGeometry(12, 2.8, 14);
@@ -1055,6 +1341,65 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
       }
     };
 
+    window.setRenderMode = function(mode) {
+      const buttons = document.querySelectorAll('[id^="render-"]');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById('render-' + mode);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      if (mode === 'blueprints') {
+        matFrontFlats.wireframe = true;
+        matRearFlats.wireframe = true;
+        matFrontFlats.opacity = 0.18;
+        matFrontFlats.color.setHex(0x00ffcc);
+        matRearFlats.opacity = 0.18;
+        matRearFlats.color.setHex(0xbc13fe);
+        
+        matSlabGround.wireframe = true;
+        matSlabExecutive.wireframe = true;
+        matSlabPanoramic.wireframe = true;
+        matSlabPenthouse.wireframe = true;
+        matSlabGround.opacity = 0.15;
+        matSlabExecutive.opacity = 0.15;
+        matSlabPanoramic.opacity = 0.15;
+        matSlabPenthouse.opacity = 0.15;
+        
+        matColumns.color.setHex(0x38bdf8);
+        matColumns.opacity = 0.9;
+        matCoreArea.color.setHex(0xf43f5e);
+        matCoreArea.opacity = 0.9;
+        
+        matLouvers.wireframe = true;
+        matLouvers.opacity = 0.2;
+        matGlassCurtain.opacity = 0.1;
+      } else {
+        matFrontFlats.wireframe = false;
+        matRearFlats.wireframe = false;
+        matFrontFlats.opacity = 0.75;
+        matFrontFlats.color.setHex(0xb58e2d);
+        matRearFlats.opacity = 0.75;
+        matRearFlats.color.setHex(0x7c3aed);
+        
+        matSlabGround.wireframe = false;
+        matSlabExecutive.wireframe = false;
+        matSlabPanoramic.wireframe = false;
+        matSlabPenthouse.wireframe = false;
+        matSlabGround.opacity = 1.0;
+        matSlabExecutive.opacity = 1.0;
+        matSlabPanoramic.opacity = 1.0;
+        matSlabPenthouse.opacity = 1.0;
+        
+        matColumns.color.setHex(0x475569);
+        matColumns.opacity = 1.0;
+        matCoreArea.color.setHex(0x2563eb);
+        matCoreArea.opacity = 1.0;
+        
+        matLouvers.wireframe = false;
+        matLouvers.opacity = 1.0;
+        matGlassCurtain.opacity = 0.45;
+      }
+    };
+
     let autoRotateActive = true;
 
     // Animation loop of lifts
@@ -1194,6 +1539,220 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
       controls.update();
     }
 
+    // 1. VR Stereo Headset mode control
+    let isVRMode = false;
+    const stereoCamera = new THREE.StereoCamera();
+    stereoCamera.eyeSeparation = 0.55; 
+
+    window.toggleVRMode = function() {
+      isVRMode = !isVRMode;
+      const btn = document.getElementById('btn-vr');
+      if (isVRMode) {
+        btn.classList.add('active');
+        btn.innerHTML = '🕶️ VR Mode: Stereo (Active)';
+      } else {
+        btn.classList.remove('active');
+        btn.innerHTML = '👓 Toggle VR Stereo View';
+        
+        // Reset full size single viewport
+        renderer.setScissorTest(false);
+        renderer.setViewport(0, 0, container.clientWidth || window.innerWidth, container.clientHeight || window.innerHeight);
+      }
+    };
+
+    // 2. Standard elevation projections jumping
+    window.setElevationView = function(viewType) {
+      autoRotateActive = false;
+      if (viewType === 'north') {
+        smoothCameraTransition(0, 16, 75, 0, 16, 0);
+      } else if (viewType === 'south') {
+        smoothCameraTransition(50, 40, -50, 0, 16, 0);
+      } else if (viewType === 'top') {
+        smoothCameraTransition(0, 90, 0.1, 0, 16, 0); 
+      }
+    };
+
+    // 3. Orbit Dynamics controls
+    window.updateOrbitSensitivity = function(type, value) {
+      const val = parseFloat(value);
+      if (type === 'zoom') {
+        controls.zoomSpeed = val;
+        document.getElementById('zoom-lbl').innerHTML = val.toFixed(1) + 'X';
+      } else if (type === 'pan') {
+        controls.panSpeed = val;
+        controls.rotateSpeed = val / 2 + 0.5;
+        document.getElementById('pan-lbl').innerHTML = val.toFixed(1) + 'X';
+      }
+      controls.update();
+    };
+
+    // 4. Inspection Camera Snapshot Suite
+    let stream = null;
+    let currentSource = 'camera'; 
+    let capturedImgData = null;
+
+    window.triggerInspectionSnapshot = function() {
+      document.getElementById('snapshot-modal').style.display = 'flex';
+      document.getElementById('loader-camera').style.display = 'block';
+      document.getElementById('webcam-video').style.display = 'none';
+      document.getElementById('fallback-canvas').style.display = 'none';
+      
+      currentSource = 'camera';
+      
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+        .then(s => {
+          stream = s;
+          const video = document.getElementById('webcam-video');
+          video.srcObject = stream;
+          video.style.display = 'block';
+          document.getElementById('loader-camera').style.display = 'none';
+        })
+        .catch(err => {
+          console.log("No camera found. Falling back to 3D virtual snapshot.");
+          useBackup3DRender();
+        });
+    };
+
+    function useBackup3DRender() {
+      currentSource = '3d';
+      document.getElementById('loader-camera').style.display = 'none';
+      document.getElementById('webcam-video').style.display = 'none';
+      
+      const canvas = document.getElementById('fallback-canvas');
+      canvas.style.display = 'block';
+      
+      renderer.render(scene, camera);
+      const dataUrl = renderer.domElement.toDataURL('image/png');
+      const img = new Image();
+      img.onload = () => {
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+      };
+      img.src = dataUrl;
+    }
+
+    window.toggleSnapshotSource = function() {
+      if (currentSource === 'camera') {
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+          stream = null;
+        }
+        useBackup3DRender();
+      } else {
+        window.triggerInspectionSnapshot();
+      }
+    };
+
+    window.closeSnapshotModal = function() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+      document.getElementById('snapshot-modal').style.display = 'none';
+    };
+
+    window.captureShutterFrame = function() {
+      const compositeCanvas = document.createElement('canvas');
+      const ctx = compositeCanvas.getContext('2d');
+      
+      let sourceW = 640;
+      let sourceH = 480;
+      
+      if (currentSource === 'camera') {
+        const video = document.getElementById('webcam-video');
+        sourceW = video.videoWidth || 640;
+        sourceH = video.videoHeight || 480;
+      } else {
+        const fallbackCanvas = document.getElementById('fallback-canvas');
+        sourceW = fallbackCanvas.width || 640;
+        sourceH = fallbackCanvas.height || 480;
+      }
+      
+      compositeCanvas.width = sourceW;
+      compositeCanvas.height = sourceH + 110; 
+      
+      // Paint background
+      ctx.fillStyle = '#05070f';
+      ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+      
+      // Draw primary image
+      if (currentSource === 'camera') {
+        const video = document.getElementById('webcam-video');
+        ctx.translate(sourceW, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, sourceW, sourceH);
+        ctx.setTransform(1, 0, 0, 1, 0, 0); 
+      } else {
+        const fallbackCanvas = document.getElementById('fallback-canvas');
+        ctx.drawImage(fallbackCanvas, 0, 0, sourceW, sourceH);
+      }
+      
+      // Frame borders
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(4, 4, compositeCanvas.width - 8, compositeCanvas.height - 8);
+      
+      // Bottom title drawer
+      ctx.fillStyle = '#0a0d1a';
+      ctx.fillRect(4, sourceH, compositeCanvas.width - 8, 106);
+      
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(212, 175, 55, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.moveTo(4, sourceH);
+      ctx.lineTo(compositeCanvas.width - 4, sourceH);
+      ctx.stroke();
+      
+      ctx.fillStyle = '#d4af37';
+      ctx.font = 'bold 11px monospace';
+      ctx.fillText('ABRAR TOWER-2 // FIELD QUALITY VERIFICATION LOG', 16, sourceH + 26);
+      
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '8.5px monospace';
+      ctx.fillText('STATION: DHAKA SECTORS PLOT // VERIFIER LOGGED', 16, sourceH + 44);
+      ctx.fillText('GEOLOGY RAFT STRUCT: BSRM 72.5 Grade Piles Installed', 16, sourceH + 60);
+      ctx.fillText('COMPLIANCE STANDARD: RAJUK Building Ordinance approved', 16, sourceH + 76);
+      
+      // Draw bar code
+      ctx.fillStyle = '#d4af37';
+      for(let i = 0; i < 22; i++) {
+        const barW = (i % 3 === 0) ? 3 : (i % 2 === 0 ? 1 : 2);
+        ctx.fillRect(compositeCanvas.width - 140 + (i*4), sourceH + 18, barW, 26);
+      }
+      
+      const now = new Date();
+      ctx.fillStyle = '#64748b';
+      ctx.font = '8px monospace';
+      ctx.fillText('UTC: ' + now.toISOString().replace('T', ' ').substring(0, 19), compositeCanvas.width - 140, sourceH + 56);
+      ctx.fillText('AZIM: 23.8732° N, 90.3985° E // ELEV: 12M', compositeCanvas.width - 140, sourceH + 72);
+      
+      capturedImgData = compositeCanvas.toDataURL('image/jpeg', 0.9);
+      
+      document.getElementById('saved-snapshot-img').src = capturedImgData;
+      document.getElementById('snapshot-modal').style.display = 'none';
+      document.getElementById('capture-saved-modal').style.display = 'flex';
+      
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+    };
+
+    window.closeSavedModal = function() {
+      document.getElementById('capture-saved-modal').style.display = 'none';
+    };
+
+    window.downloadCompiledLog = function() {
+      if (capturedImgData) {
+        const link = document.createElement('a');
+        link.download = 'abrar_tower_inspection_' + Date.now() + '.jpg';
+        link.href = capturedImgData;
+        link.click();
+      }
+    };
+
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
@@ -1209,7 +1768,32 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
       elevatorCab1.position.y = 3 + Math.abs(Math.sin(liftTime)) * 26;
       elevatorCab2.position.y = 3 + Math.abs(Math.cos(liftTime + 1.5)) * 26;
       
-      renderer.render(scene, camera);
+      if (isVRMode) {
+        // Enforce side-by-side stereo split-screen
+        renderer.setScissorTest(true);
+        const w = renderer.domElement.clientWidth;
+        const h = renderer.domElement.clientHeight;
+        const halfW = w / 2;
+
+        // Set eye camera separation ratio aspect
+        camera.aspect = halfW / h;
+        camera.updateProjectionMatrix();
+
+        // Render left eye view
+        renderer.setViewport(0, 0, halfW, h);
+        renderer.setScissor(0, 0, halfW, h);
+        stereoCamera.update(camera);
+        renderer.render(scene, stereoCamera.cameraL);
+
+        // Render right eye view
+        renderer.setViewport(halfW, 0, halfW, h);
+        renderer.setScissor(halfW, 0, halfW, h);
+        renderer.render(scene, stereoCamera.cameraR);
+      } else {
+        renderer.setScissorTest(false);
+        renderer.setViewport(0, 0, renderer.domElement.clientWidth, renderer.domElement.clientHeight);
+        renderer.render(scene, camera);
+      }
     }
 
     window.addEventListener('resize', () => {
@@ -1288,6 +1872,14 @@ export default function FloorPlan() {
   const autoPlayProgressIntervalRef = useRef<any>(null);
 
   // Sync iframe overlays (such as the isolation explorer menu inside the 3D scene) whenever visibility flags change
+  useEffect(() => {
+    if (isFullScreen3D) {
+      setIsIsolationExplorerHidden(true);
+    } else {
+      setIsIsolationExplorerHidden(false);
+    }
+  }, [isFullScreen3D]);
+
   useEffect(() => {
     const isOverlayHidden = isIsolationExplorerHidden || isPureView;
     const iframeNormal = document.getElementById('abrar-3d-iframe') as HTMLIFrameElement;
@@ -1388,6 +1980,8 @@ export default function FloorPlan() {
   const [isHoveringUnit, setIsHoveringUnit] = useState(false);
   const [hoveredUnitData, setHoveredUnitData] = useState<VisualUnit | null>(null);
   const [hoveredStatus, setHoveredStatus] = useState<string>('');
+  const [selectedFlatForDetail, setSelectedFlatForDetail] = useState<FlatDetail | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
   const [iframeUrl, setIframeUrl] = useState<string>('');
 
   // Generate a robust Blob URL of our 3D model template to guarantee successful browser parsing
@@ -1603,6 +2197,16 @@ export default function FloorPlan() {
   const activeUnit = bespokeUnits.find(u => u.id === selectedUnitId) || bespokeUnits[0];
   const activeFlatPrice = getFlatPriceNum(selectedFloor === 0 ? 1 : selectedFloor, activeUnit.basePriceNum);
 
+  const handleSelectFlatDetail = (floor: number, unitCode: string) => {
+    setSelectedFloor(floor);
+    setSelectedUnitId(unitCode);
+    const flat = allFlats.find(f => f.floor === floor && f.unitCode === unitCode);
+    if (flat) {
+      setSelectedFlatForDetail(flat);
+      setIsDetailModalOpen(true);
+    }
+  };
+
   const handleDownloadPDF = () => {
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -1799,8 +2403,8 @@ export default function FloorPlan() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-[#05070f] z-[99999] flex flex-col md:flex-row overflow-hidden font-sans text-white"
           >
-            {/* Immersive Overlay Sidebar Panel - Hide if Pure View mode is engaged to allow completely unobstructed view */}
-            {!isPureView && (
+            {/* Immersive Overlay Sidebar Panel - Hide if Pure View mode is engaged or HUD Hidden is active to allow completely unobstructed view */}
+            {!isPureView && !isIsolationExplorerHidden && (
               <div className="w-full md:w-[360px] bg-neutral-950/95 border-r border-[#1a1a1a] md:h-screen p-6 flex flex-col justify-between z-10 overflow-y-auto transition-all duration-300 animate-in slide-in-from-left">
                 <div>
                   <div className="flex items-center justify-between mb-6 pb-4 border-b border-neutral-900">
@@ -1904,7 +2508,23 @@ export default function FloorPlan() {
               />
               
               {/* Cinematic Hide/Show Controllers overlay */}
-              <div className="absolute top-5 right-16 z-50 flex items-center gap-2">
+              <div className="absolute top-5 right-16 z-50 flex flex-wrap items-center gap-2">
+                {/* HUD HOVER TOGGLE FOR HIDE & SEEK */}
+                <button
+                  onClick={() => setIsIsolationExplorerHidden(!isIsolationExplorerHidden)}
+                  className={`p-2 px-3.5 rounded font-mono text-[9px] uppercase tracking-widest transition-all cursor-pointer flex items-center gap-2 border shadow-lg backdrop-blur-md ${isIsolationExplorerHidden ? 'bg-amber-950/90 text-amber-300 border-amber-600/50 font-bold animate-pulse' : 'bg-neutral-950/90 text-neutral-300 border-neutral-850 hover:bg-neutral-900 hover:text-white'}`}
+                  title={isIsolationExplorerHidden ? 'Show Controls HUD Overlay' : 'Hide Controls HUD Overlay'}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    {isIsolationExplorerHidden ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21" />
+                    )}
+                  </svg>
+                  <span>{isIsolationExplorerHidden ? "HUD Hidden" : "Hide HUD Overlay"}</span>
+                </button>
+
                 <button
                   onClick={toggleHideTower}
                   className={`p-2 px-3.5 rounded font-mono text-[9px] uppercase tracking-widest transition-all cursor-pointer flex items-center gap-2 border shadow-lg backdrop-blur-md ${is3DModelHidden ? 'bg-gold-400 text-neutral-950 border-gold-400 font-bold' : 'bg-neutral-950/90 text-neutral-300 border-neutral-850 hover:bg-neutral-900 hover:text-white'}`}
@@ -2588,7 +3208,7 @@ export default function FloorPlan() {
                       <g id="residential-apartment-cores">
                         {/* Unit A: South-West Corner (Front) */}
                         <g 
-                          onClick={() => setSelectedUnitId('A')}
+                          onClick={() => handleSelectFlatDetail(selectedFloor, 'A')}
                           onMouseEnter={() => {
                             setHoveredZone('A');
                             setIsHoveringUnit(true);
@@ -2652,7 +3272,7 @@ export default function FloorPlan() {
 
                         {/* Unit B: South-East Corner (Front) */}
                         <g 
-                          onClick={() => setSelectedUnitId('B')}
+                          onClick={() => handleSelectFlatDetail(selectedFloor, 'B')}
                           onMouseEnter={() => {
                             setHoveredZone('B');
                             setIsHoveringUnit(true);
@@ -2716,7 +3336,7 @@ export default function FloorPlan() {
 
                         {/* Unit C: North-West Corner (Rear) */}
                         <g 
-                          onClick={() => setSelectedUnitId('C')}
+                          onClick={() => handleSelectFlatDetail(selectedFloor, 'C')}
                           onMouseEnter={() => {
                             setHoveredZone('C');
                             setIsHoveringUnit(true);
@@ -2780,7 +3400,7 @@ export default function FloorPlan() {
 
                         {/* Unit D: North-East Corner (Rear) */}
                         <g 
-                          onClick={() => setSelectedUnitId('D')}
+                          onClick={() => handleSelectFlatDetail(selectedFloor, 'D')}
                           onMouseEnter={() => {
                             setHoveredZone('D');
                             setIsHoveringUnit(true);
@@ -3138,6 +3758,15 @@ export default function FloorPlan() {
                   <div className="mt-8 space-y-2">
                     {selectedFloor > 0 && (
                       <button
+                        onClick={() => handleSelectFlatDetail(selectedFloor, selectedUnitId)}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gold-400 hover:bg-gold-350 text-neutral-950 rounded font-mono text-[9px] uppercase tracking-widest font-bold transition-all cursor-pointer"
+                      >
+                        <Sparkles size={11} className="text-neutral-950 animate-pulse" />
+                        View Full Specifications
+                      </button>
+                    )}
+                    {selectedFloor > 0 && (
+                      <button
                         onClick={handleDownloadPDF}
                         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-neutral-900/50 hover:bg-neutral-900/90 border border-neutral-800 hover:border-gold-400/40 rounded font-mono text-[9px] uppercase tracking-widest text-neutral-300 hover:text-gold-300 font-bold transition-all cursor-pointer"
                       >
@@ -3453,7 +4082,8 @@ export default function FloorPlan() {
                             key={flat.id}
                             onMouseEnter={() => setHoveredFlatId(flat.id)}
                             onMouseLeave={() => setHoveredFlatId(null)}
-                            className={`transition-colors duration-150 ${
+                            onClick={() => handleSelectFlatDetail(flat.floor, flat.unitCode)}
+                            className={`transition-colors duration-150 cursor-pointer ${
                               isSelected 
                                 ? 'bg-gold-500/5 text-white border-y border-gold-400/20' 
                                 : isHovered 
@@ -3480,24 +4110,32 @@ export default function FloorPlan() {
                               </span>
                             </td>
                             <td className="p-3 text-right">
-                              <button
-                                onClick={() => {
-                                  setSelectedFloor(flat.floor);
-                                  setSelectedUnitId(flat.unitCode);
-                                  setLayoutViewMode('blueprint');
-                                  // Smooth scroll to top of floorplan section container
-                                  const container = document.getElementById('floorplan');
-                                  if (container) {
-                                    window.scrollTo({
-                                      top: container.offsetTop - 80,
-                                      behavior: 'smooth'
-                                    });
-                                  }
-                                }}
-                                className="px-2.5 py-1 rounded bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 text-[9px] font-mono uppercase text-neutral-300 hover:text-white hover:border-gold-400/40 tracking-wider transition-colors cursor-pointer"
-                              >
-                                LOAD CAD
-                              </button>
+                              <div className="flex gap-1.5 justify-end" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  onClick={() => handleSelectFlatDetail(flat.floor, flat.unitCode)}
+                                  className="px-2 py-1 rounded bg-gold-400 hover:bg-gold-300 text-[9px] font-mono uppercase text-neutral-950 font-bold tracking-wider transition-colors cursor-pointer"
+                                >
+                                  VIEW SPECS
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedFloor(flat.floor);
+                                    setSelectedUnitId(flat.unitCode);
+                                    setLayoutViewMode('blueprint');
+                                    // Smooth scroll to top of floorplan section container
+                                    const container = document.getElementById('floorplan');
+                                    if (container) {
+                                      window.scrollTo({
+                                        top: container.offsetTop - 80,
+                                        behavior: 'smooth'
+                                      });
+                                    }
+                                  }}
+                                  className="px-2.5 py-1 rounded bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 text-[9px] font-mono uppercase text-neutral-300 hover:text-white hover:border-gold-400/40 tracking-wider transition-colors cursor-pointer"
+                                >
+                                  LOAD CAD
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -3523,6 +4161,249 @@ export default function FloorPlan() {
 
           </div>
         )}
+
+        {/* DETAILED FLAT SPECIFICATIONS MODAL OVERLAY */}
+        <AnimatePresence>
+          {isDetailModalOpen && selectedFlatForDetail && (
+            <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-950/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 md:p-10">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="relative w-full max-w-4xl bg-neutral-900 border border-gold-400/25 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row text-white my-8 bg-neutral-900"
+              >
+                {/* Close Button */}
+                <button
+                  onClick={() => setIsDetailModalOpen(false)}
+                  className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-neutral-950/80 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white hover:border-gold-400/50 transition-all cursor-pointer text-lg font-mono"
+                >
+                  &times;
+                </button>
+
+                {/* Left Side Panel */}
+                <div className="md:w-2/5 bg-neutral-950 p-6 sm:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-neutral-850">
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2.5">
+                      <Sparkles size={11} className="text-gold-400 animate-pulse" />
+                      <span className="font-mono text-[9px] text-gold-400 uppercase tracking-widest leading-none">
+                        PREMIUM RESIDENCE CARD
+                      </span>
+                    </div>
+                    
+                    <h3 className="font-serif text-3xl font-light text-white leading-tight mb-2">
+                      Suite #{selectedFlatForDetail.id}
+                    </h3>
+                    
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded bg-neutral-900 text-gold-300 text-[10px] font-mono uppercase tracking-wider border border-gold-400/10">
+                      Level 0{selectedFlatForDetail.floor} Elevation
+                    </span>
+
+                    {/* Compass Visualizer */}
+                    <div className="flex flex-col items-center justify-center bg-neutral-900/40 p-4 rounded-xl border border-neutral-800/60 my-6">
+                      <span className="font-mono text-[8px] text-neutral-500 uppercase tracking-widest block mb-3">
+                        CORNER POSITION MAP
+                      </span>
+                      <svg viewBox="0 0 100 100" className="w-24 h-24 text-neutral-700">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="#222" strokeWidth="1" strokeDasharray="2,2" />
+                        <line x1="50" y1="5" x2="50" y2="95" stroke="#222" strokeWidth="0.5" />
+                        <line x1="5" y1="50" x2="95" y2="50" stroke="#222" strokeWidth="0.5" />
+                        
+                        <text x="50" y="12" textAnchor="middle" className="font-mono text-[7px]" fill="#555">N</text>
+                        <text x="50" y="93" textAnchor="middle" className="font-mono text-[7px]" fill="#555">S</text>
+                        <text x="92" y="52" textAnchor="middle" className="font-mono text-[7px]" fill="#555">E</text>
+                        <text x="8" y="52" textAnchor="middle" className="font-mono text-[7px]" fill="#555">W</text>
+                        
+                        {/* A (SW Corner) */}
+                        <rect x="20" y="55" width="25" height="25" rx="2" 
+                          fill={selectedFlatForDetail.unitCode === 'A' ? 'rgba(212,175,55,0.2)' : '#121212'} 
+                          stroke={selectedFlatForDetail.unitCode === 'A' ? '#d4af37' : '#333'} 
+                          strokeWidth="1" 
+                        />
+                        <text x="32.5" y="70" textAnchor="middle" className="font-mono text-[8px]" fill={selectedFlatForDetail.unitCode === 'A' ? '#d4af37' : '#555'}>A</text>
+
+                        {/* B (SE Corner) */}
+                        <rect x="55" y="55" width="25" height="25" rx="2" 
+                          fill={selectedFlatForDetail.unitCode === 'B' ? 'rgba(212,175,55,0.2)' : '#121212'} 
+                          stroke={selectedFlatForDetail.unitCode === 'B' ? '#d4af37' : '#333'} 
+                          strokeWidth="1" 
+                        />
+                        <text x="67.5" y="70" textAnchor="middle" className="font-mono text-[8px]" fill={selectedFlatForDetail.unitCode === 'B' ? '#d4af37' : '#555'}>B</text>
+
+                        {/* C (NW Corner) */}
+                        <rect x="20" y="20" width="25" height="25" rx="2" 
+                          fill={selectedFlatForDetail.unitCode === 'C' ? 'rgba(212,175,55,0.2)' : '#121212'} 
+                          stroke={selectedFlatForDetail.unitCode === 'C' ? '#d4af37' : '#333'} 
+                          strokeWidth="1" 
+                        />
+                        <text x="32.5" y="35" textAnchor="middle" className="font-mono text-[8px]" fill={selectedFlatForDetail.unitCode === 'C' ? '#d4af37' : '#555'}>C</text>
+
+                        {/* D (NE Corner) */}
+                        <rect x="55" y="20" width="25" height="25" rx="2" 
+                          fill={selectedFlatForDetail.unitCode === 'D' ? 'rgba(212,175,55,0.2)' : '#121212'} 
+                          stroke={selectedFlatForDetail.unitCode === 'D' ? '#d4af37' : '#333'} 
+                          strokeWidth="1" 
+                        />
+                        <text x="67.5" y="35" textAnchor="middle" className="font-mono text-[8px]" fill={selectedFlatForDetail.unitCode === 'D' ? '#d4af37' : '#555'}>D</text>
+                      </svg>
+                      <span className="font-mono text-[9px] text-gold-300 font-semibold block mt-3 uppercase tracking-wider text-center px-1">
+                        {selectedFlatForDetail.facing}
+                      </span>
+                    </div>
+                    
+                    <div className="space-y-3 font-sans text-xs text-neutral-400 font-light leading-relaxed">
+                      <p>
+                        As a premium <strong>100% Corner Layout</strong>, Suite #{selectedFlatForDetail.id} maximizes daytime penetration and privacy.
+                      </p>
+                      <p>
+                        Sited on Level 0{selectedFlatForDetail.floor}, this elevation claims a distinct scenic wind draft of the Dhaka delta.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-neutral-850 mt-6 md:mt-0">
+                    <span className="text-[8px] font-mono text-neutral-500 uppercase tracking-widest block mb-1">BUILD ENVELOPE</span>
+                    <div className="flex items-center gap-2 text-[10px] text-neutral-400 font-mono">
+                      <ShieldCheck size={12} className="text-gold-400" />
+                      <span>RAJUK CODE COMPLIANT</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Side Panel */}
+                <div className="md:w-3/5 p-6 sm:p-8 flex flex-col justify-between bg-neutral-900">
+                  <div>
+                    <div className="flex items-center justify-between gap-4 mb-4 border-b border-neutral-800 pb-4">
+                      <div>
+                        <span className="text-[8px] font-mono text-neutral-500 uppercase tracking-widest block mb-0.5">NET TOTAL CARPET AREA</span>
+                        <span className="font-mono text-2xl font-bold text-white flex items-center gap-1.5 leading-none">
+                          <Square size={16} className="text-gold-400" />
+                          {selectedFlatForDetail.sizeSqFt} SQ FT
+                        </span>
+                      </div>
+
+                      <span className={`text-[9.5px] font-mono font-bold px-3 py-1 rounded border uppercase tracking-wider ${
+                        selectedFlatForDetail.status === 'Available'
+                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                          : selectedFlatForDetail.status === 'Reserved'
+                            ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                            : 'bg-neutral-800 border-neutral-750 text-neutral-400'
+                      }`}>
+                        {selectedFlatForDetail.status}
+                      </span>
+                    </div>
+
+                    <div className="space-y-4 font-sans text-xs">
+                      <div>
+                        <span className="text-[8.5px] font-mono text-neutral-500 uppercase tracking-widest block mb-1">IDEAL RESIDENT PROFILE</span>
+                        <p className="text-neutral-300 font-light leading-relaxed">{selectedFlatForDetail.idealFor}</p>
+                      </div>
+
+                      {/* Layout metrics */}
+                      <div className="grid grid-cols-3 gap-3 border-y border-neutral-800 py-3 font-mono text-[10px] my-4 text-center">
+                        <div className="p-2 bg-neutral-950/20 rounded">
+                          <span className="text-neutral-500 block text-[8px] font-sans">BEDROOM FAMILY</span>
+                          <span className="text-white font-bold block mt-0.5">{selectedFlatForDetail.bedrooms} Beds</span>
+                        </div>
+                        <div className="p-2 bg-neutral-950/20 rounded">
+                          <span className="text-neutral-500 block text-[8px] font-sans">BATH TOILETS</span>
+                          <span className="text-white font-bold block mt-0.5">{selectedFlatForDetail.bathrooms} Baths</span>
+                        </div>
+                        <div className="p-2 bg-neutral-950/20 rounded">
+                          <span className="text-neutral-500 block text-[8px] font-sans">VERANDA DECKS</span>
+                          <span className="text-white font-bold block mt-0.5">{selectedFlatForDetail.verandas} Attached</span>
+                        </div>
+                      </div>
+
+                      {/* Materials specifications */}
+                      <div className="p-3.5 bg-neutral-950/50 rounded-lg border border-neutral-850/60 space-y-2">
+                        <span className="text-neutral-500 block text-[8px] font-mono uppercase tracking-widest">INTERIOR PREMIUM SPECIFICATIONS</span>
+                        <div className="space-y-1 text-[9.5px] font-mono text-neutral-300 border-t border-neutral-900 pt-1.5">
+                          <div className="flex justify-between">
+                            <span className="text-neutral-500 font-sans">Living & Reception Salon:</span>
+                            <span className="text-neutral-200 text-right">Greek Pentelikon Premium Marble block</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-neutral-500 font-sans">Master Suite Bed:</span>
+                            <span className="text-neutral-200 text-right">Italian Statuario White Marble slab</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-neutral-500 font-sans">Private Detached Balconies:</span>
+                            <span className="text-gold-300 text-right">Premium Brazilian Teak Timber decking</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Valuation estimates */}
+                      <div className="p-3.5 bg-neutral-950/90 rounded-lg border border-neutral-850 flex items-center justify-between">
+                        <div>
+                          <span className="text-neutral-500 block text-[8px] font-mono uppercase tracking-widest mb-0.5">ESTIMATED VALUATION</span>
+                          <span className="font-serif text-xl sm:text-2xl text-gold-300 font-medium leading-none block">
+                            {selectedFlatForDetail.priceBDT}
+                          </span>
+                        </div>
+                        <div className="text-right font-mono text-[9px] text-neutral-500 space-y-0.5">
+                          <span>Down Payment: ৳15.00 Lakh</span>
+                          <span className="block">Installments: 36 Months</span>
+                        </div>
+                      </div>
+
+                      {/* Status timeline context */}
+                      {selectedFlatForDetail.status === 'Available' ? (
+                        <div className="p-3 bg-emerald-500/5 rounded border border-emerald-500/10 text-emerald-400/80 font-mono text-[10px] flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span>Currently open for immediate priority reservation and pre-launch booking.</span>
+                        </div>
+                      ) : selectedFlatForDetail.status === 'Reserved' ? (
+                        <div className="p-3 bg-amber-500/5 rounded border border-amber-500/10 text-amber-400 font-mono text-[10px] space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Calendar size={12} className="text-amber-400" />
+                            <strong>Reserved Pre-Registration Windows:</strong>
+                          </div>
+                          <div className="text-[9.5px] text-neutral-400 pl-4 space-y-0.5">
+                            {selectedFlatForDetail.ReservedDates?.map((d, i) => (
+                              <div key={i} className="flex justify-between max-w-[200px]">
+                                <span>• Locked Slot {i+1}:</span>
+                                <span className="text-neutral-200">{d}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-3 bg-neutral-900/60 rounded border border-neutral-850 text-neutral-400 font-mono text-[10px] flex items-center gap-2">
+                          <Lock size={12} className="text-neutral-500" />
+                          <span>Sold Out. Deed registered & archived in Dhaka Lands Records.</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={() => {
+                        setSelectedFloor(selectedFlatForDetail.floor);
+                        setSelectedUnitId(selectedFlatForDetail.unitCode);
+                        handleDownloadPDF();
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 hover:border-gold-400/40 rounded font-mono text-[0.62rem] uppercase tracking-widest text-neutral-300 hover:text-gold-300 font-bold transition-all cursor-pointer"
+                    >
+                      <FileDown size={12} className="text-gold-400" />
+                      Download Brochure
+                    </button>
+
+                    <a
+                      href="#contact"
+                      onClick={() => setIsDetailModalOpen(false)}
+                      className="flex-1 text-center block px-4 py-3 bg-gold-400 hover:bg-gold-350 text-neutral-950 border border-gold-400 rounded font-mono text-[0.62rem] uppercase tracking-widest font-bold text-neutral-950 transition-all cursor-pointer"
+                    >
+                      {selectedFlatForDetail.status === 'Available' ? 'Reserve Suite Now' : 'Inquire For Transfer'}
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
       </div>
     </section>
