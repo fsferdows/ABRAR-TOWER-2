@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Building2, 
@@ -83,6 +83,7 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
       pointer-events: auto;
       backdrop-filter: blur(10px);
       z-index: 10;
+      transition: opacity 0.25s ease, transform 0.25s ease;
     }
     h1 {
       font-size: 14px;
@@ -169,6 +170,157 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
       0%, 100% { transform: scale(0.85); opacity: 0.35; }
       50% { transform: scale(1.15); opacity: 0.85; }
     }
+
+    /* Class for sections inside the sidebar overlay */
+    .overlay-sect {
+      margin-top: 15px;
+      border-top: 1px solid rgba(212, 175, 55, 0.15);
+      padding-top: 12px;
+    }
+    .sect-title {
+      font-size: 8px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+      display: block;
+      font-weight: 600;
+    }
+    
+    /* Elegant Custom Select Dropdown matching the quiet luxury style */
+    .luxury-select {
+      width: 100%;
+      background: rgba(13, 17, 30, 0.9);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      color: #cbd5e1;
+      padding: 6px 10px;
+      font-size: 9px;
+      font-family: monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 4px;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .luxury-select:hover {
+      border-color: rgba(212, 175, 55, 0.5);
+      color: #ffffff;
+    }
+    .luxury-select option {
+      background: #080b16;
+      color: #cbd5e1;
+    }
+
+    /* Lighting grid and controls */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+    .grid-btn {
+      background: rgba(30, 41, 59, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
+      padding: 5px;
+      font-size: 8px;
+      font-family: monospace;
+      text-transform: uppercase;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    .grid-btn:hover {
+      background: rgba(212, 175, 55, 0.12);
+      color: #fff;
+      border-color: rgba(212, 175, 55, 0.3);
+    }
+    .grid-btn.active {
+      background: rgba(212, 175, 55, 0.2);
+      border-color: #d4af37;
+      color: #d4af37;
+      font-weight: bold;
+    }
+
+    /* Measure panel styles */
+    .measure-btn {
+      width: 100%;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #10b981;
+      padding: 6px;
+      font-size: 9px;
+      font-family: monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .measure-btn:hover {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+    }
+    .measure-btn.active {
+      background: #10b981;
+      color: #05070f;
+      border-color: #10b981;
+      font-weight: bold;
+    }
+    .measure-clear {
+      width: 100%;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+      padding: 5px;
+      font-size: 8px;
+      font-family: monospace;
+      text-transform: uppercase;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      margin-top: 5px;
+      display: none;
+    }
+    .measure-clear:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+    
+    /* Center Help HUD for Point Measurement */
+    #measure-hud {
+      position: absolute;
+      top: 15px;
+      transform: translateX(-50%);
+      left: 50%;
+      background: rgba(5, 7, 15, 0.95);
+      border: 1px solid #10b981;
+      border-radius: 6px;
+      padding: 10px 16px;
+      color: #ffffff;
+      font-family: monospace;
+      font-size: 9px;
+      letter-spacing: 0.5px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+      z-index: 100;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    .hud-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: pulse-green 1.5s infinite;
+    }
+    @keyframes pulse-green {
+      0% { transform: scale(0.9); opacity: 0.5; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0.5; }
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -188,6 +340,11 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
 
   <div id="viewport-container"></div>
 
+  <div id="measure-hud">
+    <div class="hud-dot"></div>
+    <span id="measure-hud-text">MEASUREMENT ACTIVE: CLICK FIRST POINT ON THE BUILDING</span>
+  </div>
+
   <div id="ui-overlay">
     <h1>Abrar Tower 3D</h1>
     <span class="subtitle">Isolation Explorer</span>
@@ -199,13 +356,44 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
     <button id="btn-step4" class="step-btn" onclick="focusStage('step4', this)">[4] Typical Floor Splitting</button>
     <button id="btn-step5" class="step-btn" onclick="focusStage('step5', this)">[5] G-Floor Covered Parking</button>
     <button id="btn-step6" class="step-btn" onclick="focusStage('step6', this)">[6] Rooftop Oasis Sanctuary</button>
+
+    <!-- DRILL-DOWN LAYER FILTER -->
+    <div class="overlay-sect">
+      <span class="sect-title">Level Drill-Down</span>
+      <select class="luxury-select" id="floor-filter-select" onchange="filterFloor(this.value)">
+        <option value="all">[-] Display All Levels</option>
+        <option value="ground">Ground Floor (Parking)</option>
+        <option value="executive">Levels 1-3 (Executive Suites)</option>
+        <option value="panoramic">Levels 4-7 (Panoramic Units)</option>
+        <option value="penthouse">Levels 8-9 (Penthouse Suites)</option>
+        <option value="rooftop">Level 10 (Rooftop Sanctuary)</option>
+      </select>
+    </div>
+
+    <!-- LIGHTING ENVIRONMENT SIMULATION -->
+    <div class="overlay-sect">
+      <span class="sect-title">Lighting & Solar Simulation</span>
+      <div class="grid-2col">
+        <button id="light-noon" class="grid-btn active" onclick="simulateLighting('noon')">Noon Sun</button>
+        <button id="light-morning" class="grid-btn" onclick="simulateLighting('morning')">Morning Sun</button>
+        <button id="light-dusk" class="grid-btn" onclick="simulateLighting('dusk')">Dusk Light</button>
+        <button id="light-midnight" class="grid-btn" onclick="simulateLighting('midnight')">Midnight Glow</button>
+      </div>
+    </div>
+
+    <!-- POINT-TO-POINT MEASUREMENT TOOL -->
+    <div class="overlay-sect">
+      <span class="sect-title">Precision Dimensions</span>
+      <button id="btn-measure" class="measure-btn" onclick="toggleMeasurementMode()">Measure Distance</button>
+      <button id="btn-measure-clear" class="measure-clear" onclick="clearMeasurements()">Clear Points</button>
+    </div>
   </div>
 
   <script>
     const container = document.getElementById('viewport-container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x05070f);
-    scene.fog = new THREE.FogExp2(0x05070f, 0.010);
+    scene.fog = new THREE.Fog(0x05070f, 150, 480);
 
     const initialWidth = container ? (container.clientWidth || window.innerWidth || 800) : 800;
     const initialHeight = container ? (container.clientHeight || window.innerHeight || 600) : 600;
@@ -405,6 +593,7 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
         colMesh.position.set(coord[0], currentY + floorHeight / 2, coord[1]);
         colMesh.castShadow = true;
         colMesh.receiveShadow = true;
+        colMesh.userData = { floorIndex: tier };
         columnsGroup.add(colMesh);
 
         // Label pillar size dynamically on a few columns in step 2
@@ -413,6 +602,7 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
           const colLabel = createTextSprite(labelStr, "#cbd5e1", "rgba(15, 23, 42, 0.85)");
           colLabel.position.set(coord[0], currentY + floorHeight, coord[1] + 1.2);
           colLabel.scale.set(6, 1.6, 1);
+          colLabel.userData = { floorIndex: tier };
           columnsGroup.add(colLabel);
         }
       });
@@ -422,11 +612,13 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
         const foyerGeo = new THREE.BoxGeometry(16, floorHeight, 18);
         const foyerMesh = new THREE.Mesh(foyerGeo, matGlassCurtain);
         foyerMesh.position.set(0, currentY + floorHeight / 2, 0);
+        foyerMesh.userData = { floorIndex: tier };
         columnsGroup.add(foyerMesh);
 
         const mechWingGeo = new THREE.BoxGeometry(32, floorHeight, 6);
         const mechWing = new THREE.Mesh(mechWingGeo, matLouvers);
         mechWing.position.set(0, currentY + floorHeight / 2, -13);
+        mechWing.userData = { floorIndex: tier };
         columnsGroup.add(mechWing);
       } else {
         // Elevator & Core Shaft blocks (Circulation Core)
@@ -434,6 +626,7 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
         const coreBoxMesh = new THREE.Mesh(coreBoxGeo, matCoreArea);
         coreBoxMesh.position.set(0, currentY + floorHeight / 2, 0);
         coreBoxMesh.castShadow = true;
+        coreBoxMesh.userData = { floorIndex: tier };
         coreGroup.add(coreBoxMesh);
 
         // Unit A & B (SW/SE facing - Amber style)
@@ -441,16 +634,19 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
         const unitAMesh = new THREE.Mesh(unitAGeo, matFrontFlats);
         unitAMesh.position.set(-10.2, currentY + floorHeight / 2, 9.5);
         unitAMesh.castShadow = true;
+        unitAMesh.userData = { floorIndex: tier };
         flatsGroup.add(unitAMesh);
 
         const unitBMesh = unitAMesh.clone();
         unitBMesh.position.x = 10.2;
+        unitBMesh.userData = { floorIndex: tier };
         flatsGroup.add(unitBMesh);
 
         // balconies & louvers representation
         const frontRailGeo = new THREE.BoxGeometry(32.8, floorHeight - 0.8, 0.1);
         const frontRail = new THREE.Mesh(frontRailGeo, matGlassCurtain);
         frontRail.position.set(0, currentY + floorHeight / 2, 15.5);
+        frontRail.userData = { floorIndex: tier };
         flatsGroup.add(frontRail);
 
         // Unit C & D (NW/NE facing - Orchid style)
@@ -458,18 +654,22 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
         const unitCMesh = new THREE.Mesh(unitCGeo, matRearFlats);
         unitCMesh.position.set(-10.2, currentY + floorHeight / 2, -10.5);
         unitCMesh.castShadow = true;
+        unitCMesh.userData = { floorIndex: tier };
         flatsGroup.add(unitCMesh);
 
         const unitDMesh = unitCMesh.clone();
         unitDMesh.position.x = 10.2;
+        unitDMesh.userData = { floorIndex: tier };
         flatsGroup.add(unitDMesh);
 
         // Aesthetic Louvers
         const slatGeo = new THREE.BoxGeometry(0.1, floorHeight - 0.1, 5);
         const lLeft = new THREE.Mesh(slatGeo, matLouvers);
         lLeft.position.set(-16.6, currentY + floorHeight / 2, 0);
+        lLeft.userData = { floorIndex: tier };
         const lRight = lLeft.clone();
         lRight.position.x = 16.6;
+        lRight.userData = { floorIndex: tier };
         flatsGroup.add(lLeft, lRight);
       }
 
@@ -484,6 +684,7 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
       const slabMesh = new THREE.Mesh(floorSlabGeo, slabMat);
       slabMesh.position.set(0, currentY + floorHeight, 0);
       slabMesh.receiveShadow = true;
+      slabMesh.userData = { floorIndex: tier };
       completeBuildingGroup.add(slabMesh);
     }
 
@@ -533,6 +734,7 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
 
     // 5. G-Floor Parking specifications & car lots representation
     const parkingBaseGroup = new THREE.Group();
+    parkingBaseGroup.userData = { floorIndex: 0 };
     columnsGroup.add(parkingBaseGroup);
 
     // Creating 10 distinct parking bays drawn onto the ground
@@ -548,17 +750,20 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
       ];
       const bayGeo = new THREE.BufferGeometry().setFromPoints(points);
       const bayLine = new THREE.Line(bayGeo, bayMat);
+      bayLine.userData = { floorIndex: 0 };
       parkingBaseGroup.add(bayLine);
 
       // Small numbering sprite
       const bayIdxSprite = createTextSprite("P" + (p + 1), "#ffffff", "rgba(5, 5, 5, 0.9)");
       bayIdxSprite.position.set(posX + 1.25, 0.1, -5.5);
       bayIdxSprite.scale.set(1.5, 0.5, 1);
+      bayIdxSprite.userData = { floorIndex: 0 };
       parkingBaseGroup.add(bayIdxSprite);
     }
 
     const pBayLabel = createTextSprite("10 CAR PARKING BAYS (5.0m x 2.5m STANDARD)", "#d4af37");
     pBayLabel.position.set(0, 1.5, -9);
+    pBayLabel.userData = { floorIndex: 0 };
     parkingBaseGroup.add(pBayLabel);
 
 
@@ -568,6 +773,7 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
     const oasisTurfGeo = new THREE.BoxGeometry(33.2, 0.1, 31.2);
     const oasisTurf = new THREE.Mesh(oasisTurfGeo, matOasisTurf);
     oasisTurf.position.set(0, roofLevelY + 0.05, 0);
+    oasisTurf.userData = { floorIndex: 10 };
     roofGroup.add(oasisTurf);
 
     // Beautiful pergola structure with beams
@@ -575,12 +781,14 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
     const pergolaMesh = new THREE.Mesh(pergolaStructuralGeo, matLouvers);
     pergolaMesh.position.set(0, roofLevelY + 1.4, 0);
     pergolaMesh.castShadow = true;
+    pergolaMesh.userData = { floorIndex: 10 };
     roofGroup.add(pergolaMesh);
 
     // Glass Balustrades
     const safetyGlassGeo = new THREE.BoxGeometry(33, 1.2, 31);
     const safetyGlass = new THREE.Mesh(safetyGlassGeo, matGlassCurtain);
     safetyGlass.position.set(0, roofLevelY + 0.6, 0);
+    safetyGlass.userData = { floorIndex: 10 };
     roofGroup.add(safetyGlass);
 
     // Solar panels representations (Active sustainable energy grid)
@@ -590,15 +798,18 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
       const panel = new THREE.Mesh(panelGeo, panelMat);
       panel.position.set(-10 + (s * 6.5), roofLevelY + 0.2, -10);
       panel.rotation.x = -0.3; // Tilt solar panels
+      panel.userData = { floorIndex: 10 };
       roofGroup.add(panel);
     }
 
     const roofSustainSprite = createTextSprite("15KW INTEGRATED SOLAR ARRAY - COMPLIANCE", "#10b981");
     roofSustainSprite.position.set(0, roofLevelY + 3.5, -10);
+    roofSustainSprite.userData = { floorIndex: 10 };
     roofGroup.add(roofSustainSprite);
 
     const roofOasisSprite = createTextSprite("COMMUNITY ROOFTOP GARDEN OASIS", "#34d399");
     roofOasisSprite.position.set(0, roofLevelY + 4, 3);
+    roofOasisSprite.userData = { floorIndex: 10 };
     roofGroup.add(roofOasisSprite);
 
 
@@ -609,6 +820,240 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
     completeBuildingGroup.add(flatsGroup);
     completeBuildingGroup.add(roofGroup);
     scene.add(completeBuildingGroup);
+
+    // Dynamic Measurement Tool & Overlay Support
+    const measurementGroup = new THREE.Group();
+    scene.add(measurementGroup);
+
+    let isMeasuring = false;
+    let measurePoint1 = null;
+    let measurePoint2 = null;
+
+    window.toggleMeasurementMode = function() {
+      isMeasuring = !isMeasuring;
+      const btn = document.getElementById('btn-measure');
+      const hud = document.getElementById('measure-hud');
+      const hudText = document.getElementById('measure-hud-text');
+      const clearBtn = document.getElementById('btn-measure-clear');
+      
+      if (isMeasuring) {
+        btn.classList.add('active');
+        btn.innerHTML = 'Cancel Measurement';
+        hud.style.display = 'flex';
+        hudText.textContent = 'MEASUREMENT ACTIVE: CLICK FIRST POINT ON THE STRUCTURE';
+        clearBtn.style.display = 'block';
+        renderer.domElement.style.cursor = 'crosshair';
+        
+        measurePoint1 = null;
+        measurePoint2 = null;
+      } else {
+        btn.classList.remove('active');
+        btn.innerHTML = 'Measure Distance';
+        hud.style.display = 'none';
+        renderer.domElement.style.cursor = 'auto';
+      }
+    };
+
+    window.clearMeasurements = function() {
+      while (measurementGroup.children.length > 0) {
+        measurementGroup.remove(measurementGroup.children[0]);
+      }
+      measurePoint1 = null;
+      measurePoint2 = null;
+      const clearBtn = document.getElementById('btn-measure-clear');
+      if (clearBtn) clearBtn.style.display = 'none';
+      const hud = document.getElementById('measure-hud');
+      if (hud) hud.style.display = 'none';
+    };
+
+    window.addEventListener('pointerdown', function(event) {
+      if (!isMeasuring) return;
+      
+      const rect = renderer.domElement.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+      
+      // We intersect with all children within the tower and ground base
+      const intersects = raycaster.intersectObjects(completeBuildingGroup.children, true);
+      
+      if (intersects.length > 0) {
+        const hitPoint = intersects[0].point;
+        const hudText = document.getElementById('measure-hud-text');
+        
+        if (!measurePoint1) {
+          measurePoint1 = hitPoint.clone();
+          
+          // Add a green glowing point indicator mesh
+          const markerGeo = new THREE.SphereGeometry(0.35, 12, 12);
+          const markerMat = new THREE.MeshBasicMaterial({ color: 0x10b981, depthTest: false });
+          const markerMesh = new THREE.Mesh(markerGeo, markerMat);
+          markerMesh.position.copy(measurePoint1);
+          markerMesh.renderOrder = 9999;
+          measurementGroup.add(markerMesh);
+          
+          if (hudText) {
+            hudText.textContent = 'POINT [1] PLACED. SELECT THE SECOND PILLAR/WALL POINT...';
+          }
+        } else if (!measurePoint2) {
+          measurePoint2 = hitPoint.clone();
+          
+          // Add second point indicator
+          const markerGeo = new THREE.SphereGeometry(0.35, 12, 12);
+          const markerMat = new THREE.MeshBasicMaterial({ color: 0x10b981, depthTest: false });
+          const markerMesh = new THREE.Mesh(markerGeo, markerMat);
+          markerMesh.position.copy(measurePoint2);
+          markerMesh.renderOrder = 9999;
+          measurementGroup.add(markerMesh);
+          
+          // Calculate and draw the line in WebGL space
+          const distVal = measurePoint1.distanceTo(measurePoint2);
+          const feetVal = distVal * 3.28084;
+          
+          const arrowLine = createDimensionLine(measurePoint1, measurePoint2, 0x10b981);
+          measurementGroup.add(arrowLine);
+          
+          // Place high contrast text sprite at the midpoint
+          const labelStr = distVal.toFixed(2) + "m (" + feetVal.toFixed(1) + " ft)";
+          const labelSpr = createTextSprite(labelStr, "#10b981", "rgba(5, 7, 15, 0.95)");
+          
+          const midPt = new THREE.Vector3().addVectors(measurePoint1, measurePoint2).multiplyScalar(0.5);
+          midPt.y += 1.2; // raise label slightly for clarity
+          labelSpr.position.copy(midPt);
+          labelSpr.scale.set(6, 1.6, 1);
+          measurementGroup.add(labelSpr);
+          
+          if (hudText) {
+            hudText.textContent = 'DIMENSION LOADED: ' + labelStr;
+          }
+          
+          // Auto disable measurement state once result is drawn
+          isMeasuring = false;
+          const btn = document.getElementById('btn-measure');
+          if (btn) {
+            btn.classList.remove('active');
+            btn.innerHTML = 'Measure Distance';
+          }
+          renderer.domElement.style.cursor = 'auto';
+          
+          setTimeout(() => {
+            if (!isMeasuring) {
+              const hud = document.getElementById('measure-hud');
+              if (hud) hud.style.display = 'none';
+            }
+          }, 4500);
+        }
+      }
+    });
+
+    // Level-specific filter drill downs
+    window.filterFloor = function(floorOption) {
+      autoRotateActive = false; // Disable auto rotation during isolation inspects
+      
+      completeBuildingGroup.traverse((child) => {
+        if (child.isMesh || child.isLine || child.isSprite) {
+          if (child === ground || child === plotGrid || structuralBaseGroup.children.includes(child)) {
+            return;
+          }
+          if (child.userData && child.userData.floorIndex !== undefined) {
+            const fIdx = child.userData.floorIndex;
+            let visible = false;
+            if (floorOption === 'all') {
+              visible = true;
+            } else if (floorOption === 'ground' && fIdx === 0) {
+              visible = true;
+            } else if (floorOption === 'executive' && fIdx >= 1 && fIdx <= 3) {
+              visible = true;
+            } else if (floorOption === 'panoramic' && fIdx >= 4 && fIdx <= 7) {
+              visible = true;
+            } else if (floorOption === 'penthouse' && fIdx >= 8 && fIdx <= 9) {
+              visible = true;
+            } else if (floorOption === 'rooftop' && fIdx === 10) {
+              visible = true;
+            }
+            child.visible = visible;
+          }
+        }
+      });
+
+      // Recalibrate focus camera targets
+      if (floorOption === 'ground') {
+        smoothCameraTransition(36, 12, 32, 0, 2, 0);
+      } else if (floorOption === 'executive') {
+        smoothCameraTransition(40, 22, 40, 0, 6, 0);
+      } else if (floorOption === 'panoramic') {
+        smoothCameraTransition(42, 32, 42, 0, 18, 0);
+      } else if (floorOption === 'penthouse') {
+        smoothCameraTransition(45, 42, 38, 0, 28, 0);
+      } else if (floorOption === 'rooftop') {
+        smoothCameraTransition(0, 52, 46, 0, 32, 0);
+      } else {
+        smoothCameraTransition(55, 50, 75, 0, 16, 0);
+      }
+    };
+
+    // Environments solar paths simulations
+    window.simulateLighting = function(lightMode) {
+      const buttons = document.querySelectorAll('.grid-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById('light-' + lightMode);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      if (lightMode === 'noon') {
+        ambientLight.color.setHex(0xffffff);
+        ambientLight.intensity = 0.65;
+        
+        sunLight.color.setHex(0xfffdf4);
+        sunLight.intensity = 1.35;
+        sunLight.position.set(45, 90, 35);
+        
+        rimSkyLight.color.setHex(0x38bdf8);
+        rimSkyLight.intensity = 0.5;
+        scene.background.setHex(0x05070f);
+        if (scene.fog) scene.fog.color.setHex(0x05070f);
+      } 
+      else if (lightMode === 'morning') {
+        ambientLight.color.setHex(0xb3e5fc);
+        ambientLight.intensity = 0.55;
+        
+        sunLight.color.setHex(0xffaa66); // warm sunset/sunrise orange
+        sunLight.intensity = 1.5;
+        sunLight.position.set(-60, 25, 10);
+        
+        rimSkyLight.color.setHex(0xe0f2fe);
+        rimSkyLight.intensity = 0.4;
+        scene.background.setHex(0x0a0c16);
+        if (scene.fog) scene.fog.color.setHex(0x0a0c16);
+      } 
+      else if (lightMode === 'dusk') {
+        ambientLight.color.setHex(0x4c1d95); // Deep purple dusk sky
+        ambientLight.intensity = 0.60;
+        
+        sunLight.color.setHex(0xf59e0b); // golden dusk beam
+        sunLight.intensity = 1.1;
+        sunLight.position.set(65, 12, -25);
+        
+        rimSkyLight.color.setHex(0xec4899);
+        rimSkyLight.intensity = 0.6;
+        scene.background.setHex(0x0a050e);
+        if (scene.fog) scene.fog.color.setHex(0x0a050e);
+      } 
+      else if (lightMode === 'midnight') {
+        ambientLight.color.setHex(0x1e1b4b);
+        ambientLight.intensity = 0.40;
+        
+        sunLight.color.setHex(0x38bdf8); // Pale moonlight
+        sunLight.intensity = 0.35;
+        sunLight.position.set(-20, 50, -40);
+        
+        rimSkyLight.color.setHex(0x4f46e5);
+        rimSkyLight.intensity = 0.5;
+        scene.background.setHex(0x020308);
+        if (scene.fog) scene.fog.color.setHex(0x020308);
+      }
+    };
 
     let autoRotateActive = true;
 
@@ -782,6 +1227,23 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
           const btn = document.getElementById('btn-' + e.data.step);
           window.focusStage(e.data.step, btn);
         }
+        if (e.data.type === 'toggle-tower-visibility') {
+          if (typeof completeBuildingGroup !== 'undefined') {
+            completeBuildingGroup.visible = e.data.visible;
+          }
+        }
+        if (e.data.type === 'toggle-ui-overlay') {
+          const overlay = document.getElementById('ui-overlay');
+          if (overlay) {
+            if (e.data.visible) {
+              overlay.style.display = 'block';
+              setTimeout(() => { overlay.style.opacity = '1'; }, 10);
+            } else {
+              overlay.style.opacity = '0';
+              setTimeout(() => { overlay.style.display = 'none'; }, 250);
+            }
+          }
+        }
         // Explicilty update on interactions or parent message triggers
         setTimeout(() => {
           const w = container ? (container.clientWidth || window.innerWidth || 800) : window.innerWidth;
@@ -809,11 +1271,115 @@ const ARCHITECTURAL_3D_HTML_BLOCK = `
 `;
 
 export default function FloorPlan() {
+  const [isLoading3D, setIsLoading3D] = useState<boolean>(true);
+  const [isLoading3DFullscreen, setIsLoading3DFullscreen] = useState<boolean>(true);
   const [selectedFloor, setSelectedFloor] = useState<number>(1); // 0 = Ground Floor, 1-9 = Residential Floors
   const [selectedUnitId, setSelectedUnitId] = useState<string>('A');
   const [layoutViewMode, setLayoutViewMode] = useState<'blueprint' | 'three3d' | 'analytics'>('three3d');
   const [selectedThreeStep, setSelectedThreeStep] = useState<string>('all');
   const [isFullScreen3D, setIsFullScreen3D] = useState<boolean>(false);
+  const [is3DModelHidden, setIs3DModelHidden] = useState<boolean>(false);
+  const [isIsolationExplorerHidden, setIsIsolationExplorerHidden] = useState<boolean>(false);
+  const [isPureView, setIsPureView] = useState<boolean>(false);
+  const [isAutoPlay, setIsAutoPlay] = useState<boolean>(true);
+  const [autoShowProgress, setAutoShowProgress] = useState<number>(0);
+  
+  const autoPlayTimerRef = useRef<any>(null);
+  const autoPlayProgressIntervalRef = useRef<any>(null);
+
+  // Sync iframe overlays (such as the isolation explorer menu inside the 3D scene) whenever visibility flags change
+  useEffect(() => {
+    const isOverlayHidden = isIsolationExplorerHidden || isPureView;
+    const iframeNormal = document.getElementById('abrar-3d-iframe') as HTMLIFrameElement;
+    const iframeFull = document.getElementById('abrar-3d-iframe-fullscreen') as HTMLIFrameElement;
+    
+    if (iframeNormal?.contentWindow) {
+      iframeNormal.contentWindow.postMessage({ type: 'toggle-ui-overlay', visible: !isOverlayHidden }, '*');
+    }
+    if (iframeFull?.contentWindow) {
+      iframeFull.contentWindow.postMessage({ type: 'toggle-ui-overlay', visible: !isOverlayHidden }, '*');
+    }
+  }, [isIsolationExplorerHidden, isPureView, isFullScreen3D, isLoading3D, isLoading3DFullscreen]);
+
+  // Sync tower visibility based on is3DModelHidden state
+  useEffect(() => {
+    const iframeNormal = document.getElementById('abrar-3d-iframe') as HTMLIFrameElement;
+    const iframeFull = document.getElementById('abrar-3d-iframe-fullscreen') as HTMLIFrameElement;
+    
+    if (iframeNormal?.contentWindow) {
+      iframeNormal.contentWindow.postMessage({ type: 'toggle-tower-visibility', visible: !is3DModelHidden }, '*');
+    }
+    if (iframeFull?.contentWindow) {
+      iframeFull.contentWindow.postMessage({ type: 'toggle-tower-visibility', visible: !is3DModelHidden }, '*');
+    }
+  }, [is3DModelHidden, isFullScreen3D, isLoading3D, isLoading3DFullscreen]);
+
+  // Unified Auto-Play feature (Revives hidden towers and cycles through layers automatically)
+  useEffect(() => {
+    if (autoPlayTimerRef.current) clearInterval(autoPlayTimerRef.current);
+    if (autoPlayProgressIntervalRef.current) clearInterval(autoPlayProgressIntervalRef.current);
+    
+    if (!isAutoPlay) {
+      setAutoShowProgress(0);
+      return;
+    }
+
+    const durationMs = 5500; // 5.5 seconds per structural slide
+    const intervalTickMs = 100;
+    const progressPerTick = (intervalTickMs / durationMs) * 100;
+    let accumulatedProgress = 0;
+
+    autoPlayProgressIntervalRef.current = setInterval(() => {
+      accumulatedProgress += progressPerTick;
+      if (accumulatedProgress >= 100) {
+        accumulatedProgress = 0;
+        
+        // Advance to next design step
+        const stepsOrder = ['all', 'step1', 'step2', 'step3', 'step4', 'step5', 'step6'];
+        setSelectedThreeStep((prevStep) => {
+          const nextIdx = (stepsOrder.indexOf(prevStep) + 1) % stepsOrder.length;
+          const nextStep = stepsOrder[nextIdx];
+          
+          // Revive / Show tower when it switches, to view the next structure clearly
+          setIs3DModelHidden(false);
+
+          // Dispatch trigger-step message
+          const iframeNorm = document.getElementById('abrar-3d-iframe') as HTMLIFrameElement;
+          const iframeFull = document.getElementById('abrar-3d-iframe-fullscreen') as HTMLIFrameElement;
+          if (iframeNorm?.contentWindow) {
+            iframeNorm.contentWindow.postMessage({ type: 'trigger-step', step: nextStep }, '*');
+            iframeNorm.contentWindow.postMessage({ type: 'toggle-tower-visibility', visible: true }, '*');
+          }
+          if (iframeFull?.contentWindow) {
+            iframeFull.contentWindow.postMessage({ type: 'trigger-step', step: nextStep }, '*');
+            iframeFull.contentWindow.postMessage({ type: 'toggle-tower-visibility', visible: true }, '*');
+          }
+          return nextStep;
+        });
+      }
+      setAutoShowProgress(Math.min(accumulatedProgress, 100));
+    }, intervalTickMs);
+
+    return () => {
+      if (autoPlayTimerRef.current) clearInterval(autoPlayTimerRef.current);
+      if (autoPlayProgressIntervalRef.current) clearInterval(autoPlayProgressIntervalRef.current);
+    };
+  }, [isAutoPlay]);
+
+  const toggleHideTower = () => {
+    const nextHidden = !is3DModelHidden;
+    setIs3DModelHidden(nextHidden);
+    
+    // Notify iframes immediately
+    const iframeNorm = document.getElementById('abrar-3d-iframe') as HTMLIFrameElement;
+    const iframeFull = document.getElementById('abrar-3d-iframe-fullscreen') as HTMLIFrameElement;
+    if (iframeNorm?.contentWindow) {
+      iframeNorm.contentWindow.postMessage({ type: 'toggle-tower-visibility', visible: !nextHidden }, '*');
+    }
+    if (iframeFull?.contentWindow) {
+      iframeFull.contentWindow.postMessage({ type: 'toggle-tower-visibility', visible: !nextHidden }, '*');
+    }
+  };
   const [filterStatus, setFilterStatus] = useState<'All' | 'Available' | 'Reserved' | 'Sold'>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [hoveredFlatId, setHoveredFlatId] = useState<string | null>(null);
@@ -823,8 +1389,6 @@ export default function FloorPlan() {
   const [hoveredUnitData, setHoveredUnitData] = useState<VisualUnit | null>(null);
   const [hoveredStatus, setHoveredStatus] = useState<string>('');
   const [iframeUrl, setIframeUrl] = useState<string>('');
-  const [isLoading3D, setIsLoading3D] = useState<boolean>(true);
-  const [isLoading3DFullscreen, setIsLoading3DFullscreen] = useState<boolean>(true);
 
   // Generate a robust Blob URL of our 3D model template to guarantee successful browser parsing
   useEffect(() => {
@@ -1235,69 +1799,74 @@ export default function FloorPlan() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-[#05070f] z-[99999] flex flex-col md:flex-row overflow-hidden font-sans text-white"
           >
-            {/* Immersive Overlay Sidebar Panel */}
-            <div className="w-full md:w-[360px] bg-neutral-950/95 border-r border-[#1a1a1a] md:h-screen p-6 flex flex-col justify-between z-10 overflow-y-auto">
-              <div>
-                <div className="flex items-center justify-between mb-6 pb-4 border-b border-neutral-900">
-                  <div>
-                    <h2 className="font-serif text-lg text-gold-400">Abrar Tower 3D</h2>
-                    <span className="font-mono text-[8px] text-neutral-500 uppercase tracking-widest block mt-0.5">Architectural Portal</span>
+            {/* Immersive Overlay Sidebar Panel - Hide if Pure View mode is engaged to allow completely unobstructed view */}
+            {!isPureView && (
+              <div className="w-full md:w-[360px] bg-neutral-950/95 border-r border-[#1a1a1a] md:h-screen p-6 flex flex-col justify-between z-10 overflow-y-auto transition-all duration-300 animate-in slide-in-from-left">
+                <div>
+                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-neutral-900">
+                    <div>
+                      <h2 className="font-serif text-lg text-gold-400">Abrar Tower 3D</h2>
+                      <span className="font-mono text-[8px] text-neutral-500 uppercase tracking-widest block mt-0.5">Architectural Portal</span>
+                    </div>
+                    <button 
+                      onClick={() => setIsFullScreen3D(false)}
+                      className="p-1.5 text-neutral-400 hover:text-white bg-neutral-900 hover:bg-neutral-850 rounded border border-neutral-800 transition-all cursor-pointer flex items-center justify-center"
+                      title="Exit Fullscreen"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
                   </div>
-                  <button 
-                    onClick={() => setIsFullScreen3D(false)}
-                    className="p-1.5 text-neutral-400 hover:text-white bg-neutral-900 hover:bg-neutral-850 rounded border border-neutral-800 transition-all cursor-pointer flex items-center justify-center"
-                    title="Exit Fullscreen"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <span className="text-[8px] font-mono tracking-widest text-[#777] uppercase block mb-3">
-                      Operational Layers
-                    </span>
-                    <div className="space-y-2">
-                      {[
-                        { id: 'all', title: '[0] Exterior Profile', d: 'Complete 10-storey landmark representation in WebGL 3D, showcasing natural Dhaka delta light and building facades.' },
-                        { id: 'step1', title: '[1] 10-Katha Setbacks', d: 'Analyze the plot bounds dimensions: 120 ft x 60 ft. Highlights maximum ground coverage (MGC 60%) to meet RAJUK standards.' },
-                        { id: 'step2', title: '[2] Structural Columns Grid', d: 'Inspect Cast-In-Situ pillars matrix with tapering logic of lower Level 1-3 pillars (1.3m x 0.9m), typical ones, down to upper Level 7 (0.8m).' },
-                        { id: 'step3', title: '[3] Elevator & Stairs Core', d: 'Circulation hub with dual high-speed express elevators moving lift locations up/down with animated glowing indicator lights.' },
-                        { id: 'step4', title: '[4] Typical Floor Splitting', d: 'Only 4 corner apartments per level to secure personal privacy, sizing 920 & 880 sqft and their spatial dimensions.' },
-                        { id: 'step5', title: '[5] Parking Layout Bay', d: 'Ground floor covered garage featuring exactly 10 parking slots labeled P1 to P10 with standard spacing layouts.' },
-                        { id: 'step6', title: '[6] Rooftop Green Oasis', d: 'Premium communal sky lawn cooling the building structures, complete with shading pergolas and integrated solar cell panels.' },
-                      ].map((s) => {
-                        const isSel = selectedThreeStep === s.id;
-                        return (
-                          <button
-                            key={s.id}
-                            onClick={() => triggerIframeStep(s.id)}
-                            className={`w-full p-2.5 rounded text-left transition-all cursor-pointer border flex flex-col gap-1 ${
-                              isSel 
-                                ? 'bg-neutral-900 border-gold-400/40 text-gold-300' 
-                                : 'bg-neutral-950 border-neutral-900 text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900/40'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between w-full">
-                              <span className="font-mono text-xs font-semibold">{s.title}</span>
-                              {isSel && <span className="w-1.5 h-1.5 rounded-full bg-gold-400 animate-pulse" />}
-                            </div>
-                            <p className="text-[10px] text-neutral-400 font-light leading-relaxed font-sans">{s.d}</p>
-                          </button>
-                        );
-                      })}
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-[8px] font-mono tracking-widest text-[#777] uppercase block mb-3">
+                        Operational Layers
+                      </span>
+                      <div className="space-y-2">
+                        {[
+                          { id: 'all', title: '[0] Exterior Profile', d: 'Complete 10-storey landmark representation in WebGL 3D, showcasing natural Dhaka delta light and building facades.' },
+                          { id: 'step1', title: '[1] 10-Katha Setbacks', d: 'Analyze the plot bounds dimensions: 120 ft x 60 ft. Highlights maximum ground coverage (MGC 60%) to meet RAJUK standards.' },
+                          { id: 'step2', title: '[2] Structural Columns Grid', d: 'Inspect Cast-In-Situ pillars matrix with tapering logic of lower Level 1-3 pillars.' },
+                          { id: 'step3', title: '[3] Elevator & Stairs Core', d: 'Circulation hub with dual high-speed express elevators moving lift locations up/down with animated glowing indicator lights.' },
+                          { id: 'step4', title: '[4] Typical Floor Splitting', d: 'Only 4 corner apartments per level to secure personal privacy, sizing 920 & 880 sqft.' },
+                          { id: 'step5', title: '[5] Parking Layout Bay', d: 'Ground floor covered garage featuring exactly 10 parking slots labeled P1 to P10.' },
+                          { id: 'step6', title: '[6] Rooftop Green Oasis', d: 'Premium communal sky lawn cooling the building structures, complete with shading pergolas.' },
+                        ].map((s) => {
+                          const isSel = selectedThreeStep === s.id;
+                          return (
+                            <button
+                              key={s.id}
+                              onClick={() => {
+                                setIsAutoPlay(false); // Pause auto play on manual choice
+                                triggerIframeStep(s.id);
+                              }}
+                              className={`w-full p-2.5 rounded text-left transition-all cursor-pointer border flex flex-col gap-1 ${
+                                isSel 
+                                  ? 'bg-neutral-900 border-gold-400/40 text-gold-300' 
+                                  : 'bg-neutral-950 border-neutral-900 text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900/40'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between w-full">
+                                <span className="font-mono text-xs font-semibold">{s.title}</span>
+                                {isSel && <span className="w-1.5 h-1.5 rounded-full bg-gold-400 animate-pulse" />}
+                              </div>
+                              <p className="text-[10px] text-neutral-400 font-light leading-relaxed font-sans">{s.d}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="pt-6 border-t border-neutral-900 mt-6 text-2xs font-mono text-neutral-500 flex justify-between items-center">
-                <span>DRAG ROTATE • ZOOM</span>
-                <span className="text-gold-400 font-bold">ABRAR TOWER-2</span>
+                <div className="pt-6 border-t border-neutral-900 mt-6 text-2xs font-mono text-neutral-500 flex justify-between items-center">
+                  <span>DRAG ROTATE • ZOOM</span>
+                  <span className="text-gold-400 font-bold">ABRAR TOWER-2</span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Immersive 3D Render Host inside Fullscreen overlay */}
             <div className="flex-1 h-full bg-[#05070f] relative">
@@ -1325,12 +1894,49 @@ export default function FloorPlan() {
                     const iframe = e.currentTarget;
                     if (iframe.contentWindow) {
                       iframe.contentWindow.dispatchEvent(new Event('resize'));
+                      // Sync visibility state immediately on load securely
+                      iframe.contentWindow.postMessage({ type: 'toggle-tower-visibility', visible: !is3DModelHidden }, '*');
                     }
                   } catch (err) {
                     console.warn(err);
                   }
                 }}
               />
+              
+              {/* Cinematic Hide/Show Controllers overlay */}
+              <div className="absolute top-5 right-16 z-50 flex items-center gap-2">
+                <button
+                  onClick={toggleHideTower}
+                  className={`p-2 px-3.5 rounded font-mono text-[9px] uppercase tracking-widest transition-all cursor-pointer flex items-center gap-2 border shadow-lg backdrop-blur-md ${is3DModelHidden ? 'bg-gold-400 text-neutral-950 border-gold-400 font-bold' : 'bg-neutral-950/90 text-neutral-300 border-neutral-850 hover:bg-neutral-900 hover:text-white'}`}
+                >
+                  {is3DModelHidden ? (
+                    <>
+                      <span className="w-1.5 h-1.5 rounded-full bg-neutral-950 animate-pulse" />
+                      Show 3D Tower
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-1.5 h-1.5 rounded-full bg-gold-400 animate-pulse" />
+                      Conceal Tower Envelope
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {is3DModelHidden && (
+                <div className="absolute top-18 right-16 z-50 p-4 rounded-lg bg-neutral-950/90 border border-gold-400/20 max-w-xs shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 leading-normal">
+                  <h4 className="font-mono text-[9px] font-bold text-gold-300 uppercase tracking-wider">Viewing Pure Footprint</h4>
+                  <p className="text-[10px] text-neutral-400 mt-1 font-light">
+                    Main 3-dimensional building volume is hidden. Showing raw plot setbacks, orientation axis, gridlines, and elevator rails.
+                  </p>
+                  {isAutoPlay && (
+                    <div className="mt-2 text-[8px] font-mono text-neutral-500 uppercase tracking-widest flex items-center justify-between">
+                      <span>Restoring automatically in</span>
+                      <span className="text-gold-400">{Math.max(0, ((4000 - (autoShowProgress / 100 * 4000)) / 1000)).toFixed(1)}s</span>
+                    </div>
+                  )}
+                </div>
+              )}
               
               <div className="absolute bottom-5 right-5 pointer-events-none bg-neutral-950/80 border border-neutral-800 text-[9px] font-mono uppercase tracking-widest px-3 py-1.5 rounded text-neutral-400">
                 Press [Esc] or click Close to Return
@@ -1421,18 +2027,67 @@ export default function FloorPlan() {
             {/* 3D CANVAS PORT */}
             <div className="lg:col-span-8 bg-neutral-900/40 rounded-xl border border-neutral-850 overflow-hidden flex flex-col relative animate-in fade-in zoom-in-95 duration-500">
               {/* HUD Header */}
-              <div className="flex items-center justify-between p-4 border-b border-neutral-850 bg-neutral-950/70">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b border-neutral-850 bg-neutral-950/70 gap-3">
                 <div className="flex items-center gap-3">
-                  <span className="w-2 h-2 rounded-full bg-gold-400 animate-pulse" />
+                  <span className={`w-2 h-2 rounded-full ${is3DModelHidden ? 'bg-red-500' : 'bg-gold-400 animate-pulse'}`} />
                   <span className="font-mono text-[10px] text-neutral-400 uppercase tracking-widest">
-                    MODEL RENDER PORT // ISOLATED 3D
+                    MODEL RENDER PORT // {is3DModelHidden ? 'STRUCTURE HIDDEN' : 'ISOLATED 3D'}
                   </span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="hidden sm:flex text-[9px] font-mono text-neutral-500 uppercase tracking-widest items-center gap-1.5">
-                    <Compass size={11} className="text-gold-400 shrink-0 animate-spin" style={{ animationDuration: '6s' }} />
-                    DRAG TO ROTATE • ZOOM
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* AUTO-PLAY TOUR TOGGLE */}
+                  <div className="flex items-center gap-2 px-2.5 py-1 bg-neutral-900 border border-neutral-800 rounded font-mono text-[9px] text-neutral-400">
+                    <span className="uppercase text-[8px] tracking-wider text-neutral-500">Auto-Play Tour</span>
+                    <button
+                      onClick={() => {
+                        const nextAuto = !isAutoPlay;
+                        setIsAutoPlay(nextAuto);
+                      }}
+                      className={`relative inline-flex h-4 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAutoPlay ? 'bg-gold-400/80' : 'bg-neutral-800'}`}
+                    >
+                      <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-neutral-950 shadow ring-0 transition duration-200 ease-in-out ${isAutoPlay ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
+                    {isAutoPlay && (
+                      <span className="text-gold-400 text-[8px] font-bold">
+                        {Math.max(0, ((5500 - (autoShowProgress / 100 * 5500)) / 1000)).toFixed(1)}s
+                      </span>
+                    )}
                   </div>
+
+                  {/* HIDE 3D TOWER BUTTON */}
+                  <button
+                    onClick={toggleHideTower}
+                    className={`p-1.5 px-3 rounded font-mono text-[9px] uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border ${is3DModelHidden ? 'bg-gold-400/10 text-gold-300 border-gold-400' : 'bg-neutral-900 text-neutral-300 border-neutral-800 hover:text-white hover:bg-neutral-800'}`}
+                    title={is3DModelHidden ? 'Restore Tower Envelope Mesh' : 'Conceal Tower Envelope Mesh to Show Setbacks'}
+                  >
+                    {is3DModelHidden ? (
+                      <>
+                        <svg className="w-3 h-3 text-gold-400 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Show 3D Tower
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3 h-3 text-neutral-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21" />
+                        </svg>
+                        Hide 3D Tower
+                      </>
+                    )}
+                  </button>
+
+                  {/* TOGGLE INNER HUD EXPLORER */}
+                  <button
+                    onClick={() => setIsIsolationExplorerHidden(!isIsolationExplorerHidden)}
+                    className={`p-1.5 px-3 rounded font-mono text-[9px] uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 border ${isIsolationExplorerHidden ? 'bg-amber-950/90 text-amber-300 border-amber-600/50' : 'bg-neutral-900 text-neutral-300 border-neutral-800 hover:text-white hover:bg-neutral-850'}`}
+                    title={isIsolationExplorerHidden ? 'Show Inner Overlay' : 'Hide Inner Overlay to enable Hide & Seek'}
+                  >
+                    {isIsolationExplorerHidden ? "HUD Hidden" : "Hide HUD Overlay"}
+                  </button>
+
+                  {/* CINEMATIC FULLSCREEN */}
                   <button 
                     onClick={() => setIsFullScreen3D(true)}
                     className="p-1.5 px-3 rounded bg-neutral-900 text-neutral-300 hover:text-white border border-neutral-800 hover:bg-neutral-800 transition-all cursor-pointer flex items-center gap-2 font-mono text-[9px] uppercase tracking-wider text-xs"
@@ -1460,6 +2115,64 @@ export default function FloorPlan() {
                     </div>
                   </div>
                 )}
+
+                {is3DModelHidden && (
+                  <div className="absolute inset-x-4 top-4 z-30 p-4 rounded bg-neutral-950/90 border border-gold-400/20 shadow-2xl backdrop-blur-md max-w-sm duration-300 animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gold-400/10 flex items-center justify-center border border-gold-400/30 shrink-0 text-gold-400">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-mono text-[9px] font-bold uppercase tracking-widest text-gold-300">Unobstructed Plot Active</h4>
+                        <p className="text-[10px] text-neutral-400 font-light mt-1 leading-normal leading-relaxed">
+                          Concealing the tower envelope to expose the full building setback parameters on the 10-Katha landscape plate.
+                        </p>
+                        
+                        {isAutoPlay ? (
+                          <div className="mt-3">
+                            <div className="flex justify-between items-center text-[8px] font-mono text-neutral-500 uppercase tracking-widest mb-1">
+                              <span>Auto-Play Reveal Active</span>
+                              <span className="text-gold-400 font-bold">
+                                {Math.max(0, ((4000 - (autoShowProgress / 100 * 4000)) / 1000)).toFixed(1)}s
+                              </span>
+                            </div>
+                            <div className="w-full h-0.5 bg-neutral-900 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gold-400 transition-all duration-100 ease-linear" 
+                                style={{ width: `${autoShowProgress}%` }}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-3 flex gap-2">
+                            <button
+                              onClick={() => setIs3DModelHidden(false)}
+                              className="text-[8px] font-mono text-gold-400 hover:text-white uppercase tracking-wider bg-neutral-900 border border-neutral-800 hover:border-gold-400/40 px-2.5 py-1 rounded transition-all cursor-pointer"
+                            >
+                              Show Tower
+                            </button>
+                            <button
+                              onClick={() => {
+                                setIsAutoPlay(true);
+                                // Trigger automated cycles
+                                setIs3DModelHidden(false);
+                                setTimeout(() => {
+                                  toggleHideTower();
+                                }, 50);
+                              }}
+                              className="text-[8px] font-mono text-neutral-500 hover:text-neutral-300 uppercase tracking-wider px-1 py-1 transition-all cursor-pointer"
+                            >
+                              Enable Auto-Play
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <iframe
                   id="abrar-3d-iframe"
                   title="3D Architectural Model"
@@ -1472,6 +2185,8 @@ export default function FloorPlan() {
                       const iframe = e.currentTarget;
                       if (iframe.contentWindow) {
                         iframe.contentWindow.dispatchEvent(new Event('resize'));
+                        // Sync current state on load
+                        iframe.contentWindow.postMessage({ type: 'toggle-tower-visibility', visible: !is3DModelHidden }, '*');
                       }
                     } catch (err) {
                       console.warn(err);
